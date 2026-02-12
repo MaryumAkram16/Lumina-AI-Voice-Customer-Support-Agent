@@ -122,6 +122,7 @@ If you want a custom button or UI:
     });
     ```
 3.  Create a backend endpoint to generate the `access_token` using your Retell API Key.
+4.  for more information refer to the following link https://docs.retellai.com/api-references/create-phone-call
 
 ## 💰 Cost Estimation
 
