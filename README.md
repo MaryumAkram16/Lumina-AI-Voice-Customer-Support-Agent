@@ -73,19 +73,8 @@ To add the voice agent to your website, you have two primary options:
 4.  Paste the snippet into the `<head>` or before the closing `</body>` tag of your website's HTML.
 
 #### Option B: Custom Frontend Integration (Advanced)
-If you want a custom button or UI:
-1.  Install the Retell Client SDK: `npm install retell-client-js-sdk`.
-2.  Initialize the client in your frontend code:
-    ```javascript
-    import { RetellWebClient } from "retell-client-js-sdk";
-    const retellClient = new RetellWebClient();
-    
-    // To start a call
-    retellClient.startCall({
-      accessToken: "YOUR_ACCESS_TOKEN", // Generated via your backend
-    });
-    ```
-3.  Create a backend endpoint to generate the `access_token` using your Retell API Key.
+Refer to the following link 
+https://docs.retellai.com/api-references/create-phone-call
 
 ## 💰 Cost Estimation
 
