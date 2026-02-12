@@ -1,241 +1,95 @@
 # Lumina-AI-Voice-Customer-Support-Agent
-Scalable AI Voice Automation System integrating Retell AI, OpenAI, and webhook-based workflow logic to handle real-time e-commerce delivery support calls.
 
-This repository contains the backend automation workflows for the AI Voice Customer Support Agent, a real-time voice-based automation system designed for e-commerce delivery and support queries.
+# 🧠 E-Commerce Voice AI – System Architecture
 
-The system integrates Retell AI (voice infrastructure) with a structured workflow engine to automate customer calls related to delivery tracking and order support.
+An advanced, production-ready voice automation system designed for modern e-commerce. This workflow leverages **Retell AI** for natural voice interactions and **n8n** for complex backend orchestration, providing a seamless customer experience for order tracking, cancellations, returns, and refunds.
 
-📂 Repository Structure
+---
 
-The project is organized into the following components:
+## 📌 Problem Statement
 
-Directory/File	Description
-E-Commerce Voice AI – System Architecture.json	Core workflow defining modular architecture and routing logic.
-Retell Delivery Customer Support.json	Retell-integrated voice support workflow.
-docs/	Architecture diagrams, workflow screenshots, and documentation assets.
-demo/	Demo video or walkthrough link.
-README.md	Project documentation file.
-LICENSE.md	Project license information.
-🚀 Features
+Traditional e-commerce customer support faces several critical challenges:
+*   **High Operational Costs:** Maintaining 24/7 human support for repetitive tasks like order tracking is expensive.
+*   **Customer Friction:** Long wait times and complex IVR menus lead to poor customer satisfaction.
+*   **Data Silos:** Support interactions are often disconnected from the actual order database, leading to manual data entry and errors.
+*   **Scalability Issues:** Human teams cannot easily scale during peak seasons (e.g., Black Friday) without significant lead time and training.
 
-The system is divided into two structured workflows:
+## 💡 The Solution
 
-1️⃣ Voice Delivery Support Service
+The **E-Commerce Voice AI System** automates the entire post-purchase lifecycle through a conversational voice interface. By integrating high-fidelity AI voice synthesis with real-time database orchestration, the system provides:
+*   **Instant Resolution:** Customers get immediate answers to order status queries without waiting.
+*   **Self-Service Transactions:** Users can initiate cancellations and returns directly through voice, with the system enforcing business logic (e.g., return windows).
+*   **Real-Time Sync:** Every interaction is logged, and order statuses are updated instantly in the backend (Google Sheets/CRM).
+*   **Proactive Communication:** Automated SMS follow-ups ensure customers have a written record of their voice interaction.
 
-Accepts real-time voice calls through Retell AI
+---
 
-Converts speech to text (STT)
+## 🚀 Key Features
 
-Sends transcript to workflow via webhook
+### 1. Intelligent Intent Routing
+The system uses a sophisticated switch logic to identify user needs from the voice stream:
+*   **Order Tracking:** Real-time lookup and conversational delivery of shipping status.
+*   **Cancellation Management:** Automated eligibility checks based on delivery dates.
+*   **Return Processing:** Collection of item condition and reasons with automated status updates.
+*   **Refund Evaluation:** Policy-based assessment of refund requests.
 
-Detects customer intent
+### 2. Business Logic Enforcement
+*   **Eligibility Engine:** Custom JavaScript nodes calculate if an order is within the allowed window for returns or cancellations.
+*   **Data Validation:** Ensures Order IDs and customer details are verified before performing any write operations.
 
-Handles:
+### 3. Comprehensive Logging & Analytics
+*   **Call Metrics:** Captures duration, sentiment, and outcome for every call.
+*   **Audit Trail:** Every status change is logged back to the database for transparency.
 
-Order tracking
+---
 
-Delivery status updates
+## 🛠 Tech Stack
 
-Delivery delay queries
+| Component | Technology | Role |
+| :--- | :--- | :--- |
+| **Voice Interface** | [Retell AI](https://www.retellai.com/) | Handles Speech-to-Text (STT), LLM processing, and Text-to-Speech (TTS). |
+| **Orchestration** | [n8n](https://n8n.io/) | The "Brain" that manages logic, API calls, and data flow. |
+| **Database** | Google Sheets | Acts as the lightweight CRM/Order Management System. |
+| **Messaging** | SMS Integration | Sends confirmation details to the user's mobile device. |
+| **Logic** | Node.js / JavaScript | Custom scripts within n8n for date calculations and message formatting. |
 
-General support questions
+---
 
-Generates structured AI responses
+## ⚙️ Setup Guide
 
-Converts response back to voice (TTS)
+### Prerequisites
+*   An **n8n** instance (Cloud or Self-hosted).
+*   A **Retell AI** account and API Key.
+*   A **Google Cloud Project** with Sheets API enabled and a Service Account JSON key.
 
-Returns audio to caller in real-time
+### Installation Steps
+1.  **Database Setup:**
+    *   Create a Google Sheet with columns: `OrderID`, `CustomerName`, `Status`, `Delivery`, `Carrier`, `PhoneNo`, `Email`.
+    *   Share the sheet with your Google Service Account email.
+2.  **n8n Configuration:**
+    *   Import the provided `.json` workflow file into n8n.
+    *   Configure the **Google Sheets Account** credentials using your Service Account JSON.
+    *   Update the `documentId` in the "Fetch Order Records" and other Google Sheets nodes to match your sheet's ID.
+3.  **Retell AI Integration:**
+    *   Create a new Agent in Retell AI.
+    *   Set the **Custom Webhook URL** in Retell to point to your n8n Webhook node URL.
+    *   Ensure the LLM prompt in Retell is configured to send the `intent` and `order_id` in the webhook payload.
+4.  **Activation:**
+    *   Set the n8n workflow to **Active**.
+    *   Test the flow by calling your Retell AI number.
 
-2️⃣ Modular Voice Agent Architecture
+---
 
-Structured conditional routing
+## 💰 Pricing Overview (Estimated)
 
-Intent-based decision logic
+| Service | Plan | Estimated Cost |
+| :--- | :--- | :--- |
+| **Retell AI** | Pay-as-you-go | ~$0.07 - $0.08 per minute |
+| **n8n** | Starter / Self-hosted | $20/mo (Cloud) or Free (Self-hosted) |
+| **Google Sheets** | Standard | Free (within API quotas) |
+| **Telephony** | Twilio / Retell | ~$0.01 per minute |
 
-Backend-ready API structure
+> **Note:** Total cost per call is approximately **$0.10 per minute**, representing a >90% saving compared to human agents.
 
-Scalable node-based automation design
-
-Clear separation of:
-
-Voice layer
-
-Workflow engine
-
-AI logic
-
-Backend integration
-
-This workflow demonstrates production-level system architecture thinking.
-
-🏗️ System Architecture
-High-Level Flow
-Customer (Voice Call)
-        ↓
-Retell AI (STT)
-        ↓
-Webhook Trigger
-        ↓
-Workflow Engine
-        ↓
-Intent Detection
-        ↓
-Conditional Routing
-        ↓
-Order / Delivery API
-        ↓
-AI Response Generation
-        ↓
-Retell AI (TTS)
-        ↓
-Customer Receives Response
-
-🛠️ Technology Stack
-
-Voice Infrastructure: Retell AI
-
-Automation Backend: n8n (Workflow Automation Tool)
-
-AI Processing: OpenAI API (LLM Integration)
-
-Communication: Webhook-Based Trigger System
-
-Configuration: JSON Workflow Architecture
-
-⚙️ Setup and Deployment
-1️⃣ Prerequisites
-
-To run this workflow, you will need:
-
-An active n8n instance (self-hosted or cloud)
-
-A Retell AI account
-
-An OpenAI API Key
-
-Backend API endpoints (optional for full integration)
-
-2️⃣ Importing the Workflows
-
-Download both workflow JSON files from this repository.
-
-Open your n8n instance.
-
-Click Workflows → + New → Import from JSON.
-
-Upload:
-
-E-Commerce Voice AI – System Architecture.json
-
-Retell Delivery Customer Support.json
-
-3️⃣ Configuring Credentials
-
-After importing:
-
-🔹 OpenAI Credentials
-
-Open AI nodes inside workflow.
-
-Click credential field.
-
-Select Create New → OpenAI API
-
-Enter your API key.
-
-Save.
-
-🔹 Retell Webhook Setup
-
-Copy production webhook URL from n8n.
-
-Configure it inside your Retell dashboard.
-
-Ensure call routing is connected to this webhook.
-
-4️⃣ Activating the Workflow
-
-Toggle workflow to Active
-
-Use the production webhook URL
-
-Initiate test call from Retell
-
-Monitor execution logs in n8n
-
-🔗 Voice Integration
-
-The Retell platform must be configured to send call transcripts to:
-
-POST https://your-n8n-instance/webhook/retell-support
-
-Expected Webhook Input (Example)
-{
-  "call_id": "12345",
-  "transcript": "Where is my order?",
-  "customer_number": "+123456789"
-}
-
-Example Response Format
-{
-  "response": "Your order is currently out for delivery and will arrive today."
-}
-
-🧠 Workflow Logic Breakdown
-Step	Description
-1	Customer initiates call
-2	Retell converts speech to text
-3	Transcript sent to webhook
-4	Intent detected (tracking / delay / inquiry)
-5	Conditional routing triggered
-6	API or AI generates response
-7	Response converted back to voice
-📈 Scalability & Production Readiness
-
-This system is designed for expansion and production deployment.
-
-Potential upgrades:
-
-Persistent conversation memory
-
-Database-backed order lookup
-
-Sentiment analysis
-
-Human agent escalation routing
-
-Call logging system
-
-Multi-language voice support
-
-Analytics dashboard
-
-CRM auto-update integration
-
-🧪 Testing Strategy
-
-Simulated delivery tracking calls
-
-Invalid order ID testing
-
-Ambiguous intent testing
-
-API failure simulation
-
-High call volume stress testing
-
-🔐 Security Considerations
-
-For production deployment:
-
-Secure webhook endpoints
-
-Implement API authentication
-
-Add rate limiting
-
-Enable error logging
-
-Store conversation logs securely
-
-Implement fallback to human support
+---
+*Documentation generated by Manus AI.*
