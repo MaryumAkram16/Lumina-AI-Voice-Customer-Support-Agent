@@ -38,6 +38,42 @@ The **E-Commerce Voice AI System** provides an automated, human-like voice inter
 *   **Logic:** JavaScript (Node.js) within n8n Code nodes
 *   **Communication:** Webhooks for real-time data exchange
 
+## 🏗 System Architecture
+
+![System Architecture](docs/architecture.png)
+
+The system follows a modular event-driven architecture:
+1.  **Voice Layer:** Retell AI handles the real-time audio stream, STT (Speech-to-Text), and TTS (Text-to-Speech).
+2.  **Logic Layer:** n8n acts as the brain, receiving structured data from Retell, performing database lookups, and executing business logic.
+3.  **Data Layer:** Google Sheets serves as a flexible, real-time database for order and customer information.
+4.  **Intelligence Layer:** Gemini AI performs post-call analysis to extract sentiment and key metrics.
+
+## 🔌 API Reference (n8n Webhook)
+
+The n8n workflow expects a `POST` request with the following JSON structure from Retell:
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `order_id` | `string` | The customer's order identification number. |
+| `intent` | `string` | The detected intent (e.g., `track_order`, `cancel_order`). |
+| `email` | `string` | Customer email address for verification. |
+| `phone_no` | `string` | Customer phone number. |
+
+## 🛡 Security & Compliance
+
+*   **Data Encryption:** All data in transit is encrypted via HTTPS/TLS.
+*   **Access Control:** Google Sheets access is restricted via Service Account credentials.
+*   **Privacy:** No audio recordings are stored in the n8n environment; only structured metadata is processed.
+
+## ❓ Troubleshooting
+
+| Issue | Possible Cause | Solution |
+| :--- | :--- | :--- |
+| **Agent doesn't respond** | Webhook URL mismatch | Verify the URL in Retell matches the n8n production webhook. |
+| **Order not found** | Sheet permissions | Ensure the Google Sheet is shared with the Service Account email. |
+| **Wrong intent routing** | Tool definition error | Check that tool names in Retell match the switch logic in n8n. |
+| **Latency issues** | Server region | Host n8n in a region close to Retell's servers (e.g., US-East). |
+
 ## ⚙️ Setup Guide
 
 ### 1. Prerequisites
@@ -73,8 +109,19 @@ To add the voice agent to your website, you have two primary options:
 4.  Paste the snippet into the `<head>` or before the closing `</body>` tag of your website's HTML.
 
 #### Option B: Custom Frontend Integration (Advanced)
-Refer to the following link 
-https://docs.retellai.com/api-references/create-phone-call
+If you want a custom button or UI:
+1.  Install the Retell Client SDK: `npm install retell-client-js-sdk`.
+2.  Initialize the client in your frontend code:
+    ```javascript
+    import { RetellWebClient } from "retell-client-js-sdk";
+    const retellClient = new RetellWebClient();
+    
+    // To start a call
+    retellClient.startCall({
+      accessToken: "YOUR_ACCESS_TOKEN", // Generated via your backend
+    });
+    ```
+3.  Create a backend endpoint to generate the `access_token` using your Retell API Key.
 
 ## 💰 Cost Estimation
 
