@@ -8,7 +8,7 @@
     "version": 2,
     "conversation_flow_id": "conversation_flow_2738bc1950ed"
   },
-  "webhook_url": "https://mc109.app.n8n.cloud/webhook/retell",
+  "webhook_url": "your_webhook_url",
   "language": "en-US",
   "data_storage_setting": "everything",
   "post_call_analysis_data": [
@@ -1888,7 +1888,7 @@
             }
           }
         },
-        "url": "https://aiengr.app.n8n.cloud/webhook/retell"
+        "url": "your_webhook_url"
       }
     ],
     "model_choice": {
