@@ -45,6 +45,11 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 - **Call Analytics**: Logs call metrics and events for post-call analysis and service improvement.
 - **Conversational Intent Routing**: Sophisticated routing logic to handle various customer needs within a single call.
 
+## Workflow Screenshot
+
+![Workflow Screenshot]([PASTE_IMAGE_URL_HERE](https://github.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/blob/main/lumina.PNG?raw=true))
+
+
 ## Tech Stack
 
 - **Voice Engine**: Retell AI (Conversational Voice API)
