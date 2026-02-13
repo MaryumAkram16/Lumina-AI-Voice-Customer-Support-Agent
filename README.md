@@ -22,7 +22,9 @@ An advanced, automated voice-based customer support system designed for e-commer
 Lumina is an AI voice customer support agent that helps businesses streamline their customer service process using advanced voice recognition and response technology. It's specifically designed for e-commerce platforms to handle routine customer inquiries automatically, 24/7, with human-like conversational abilities.
 
 ## Live Demo
+This demo shows the *Lumina AI Voice Customer Support Agent* handling a live e-commerce support call, including intent detection, workflow execution, and real-time voice interaction.
 
+[![Watch Demo](https://img.youtube.com/vi/P8TuDYV7eaY/0.jpg)](https://youtu.be/P8TuDYV7eaY)
 
 ## Problem Statement
 Traditional e-commerce customer support often suffers from:
