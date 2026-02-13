@@ -1,0 +1,1906 @@
+{
+  "agent_id": "",
+  "channel": "voice",
+  "last_modification_timestamp": 1770982541350,
+  "agent_name": "Lumina  AI Voice Customer Support Agent (Retell)",
+  "response_engine": {
+    "type": "conversation-flow",
+    "version": 2,
+    "conversation_flow_id": "conversation_flow_2738bc1950ed"
+  },
+  "webhook_url": "https://mc109.app.n8n.cloud/webhook/retell",
+  "language": "en-US",
+  "data_storage_setting": "everything",
+  "post_call_analysis_data": [
+    {
+      "name": "user_message",
+      "description": "what the customer says",
+      "type": "string",
+      "examples": [],
+      "required": false
+    },
+    {
+      "type": "number",
+      "name": "order_id",
+      "description": "what is order-id"
+    },
+    {
+      "type": "string",
+      "name": "intent",
+      "description": "from the message check intent like order status, cancel order,return/refund order and send intent"
+    }
+  ],
+  "version": 2,
+  "is_published": false,
+  "version_title": "ecom",
+  "post_call_analysis_model": "gemini-2.5-flash-lite",
+  "voice_id": "11labs-Cimo",
+  "max_call_duration_ms": 3600000,
+  "interruption_sensitivity": 0.9,
+  "boosted_keywords": [
+    "order ID",
+    "tracking",
+    "shipment",
+    "delivery",
+    "cancel",
+    "refund"
+  ],
+  "normalize_for_speech": true,
+  "stt_mode": "accurate",
+  "user_dtmf_options": {},
+  "denoising_mode": "noise-and-background-speech-cancellation",
+  "conversationFlow": {
+    "conversation_flow_id": "conversation_flow_2738bc1950ed",
+    "version": 2,
+    "global_prompt": "You are an AI assistant for an e-commerce platform. Your job is to help customers with order tracking, cancellations, product inquiries, and general support. Always respond politely and guide the user clearly.\n\n",
+    "nodes": [
+      {
+        "name": "Conversation",
+        "edges": [
+          {
+            "destination_node_id": "component-node-1769624967790",
+            "id": "edge-1769274772679-1mececydr",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Transition when the user asks about order status, tracking, delivery, or shipment.\n"
+            }
+          },
+          {
+            "destination_node_id": "component-node-1769624968500",
+            "id": "edge-1769624928069-1pweifi9r",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "transition when the user ask to cancel order, delivery or shipment."
+            }
+          },
+          {
+            "destination_node_id": "component-node-1769885208980",
+            "id": "edge-1769885212746-5efgz2rr3",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Transition when the user asks about return their order tracking, delivery, or shipment.\n"
+            }
+          },
+          {
+            "destination_node_id": "component-node-1769953147508",
+            "id": "edge-1769953118293-1edbjpjrg",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "Transition when the user asks about refund of their order tracking, delivery, or shipment.\n"
+            }
+          }
+        ],
+        "id": "node-1769274772679",
+        "type": "conversation",
+        "display_position": {
+          "x": 108,
+          "y": -342
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "You are Lumina, a friendly and professional AI voice assistant for an e-commerce website.\n\nYour role is to help customers with:\n\n\ud83d\udce6 Tracking orders\n\n\u274c Cancelling orders\n\n\ud83d\udd04 Returns and refunds\n\nWhen a user asks anything related to order tracking, smoothly continue the order tracking flow.\n\nIf the user provides an order ID, capture and store it as a variable named order_id.\n\nAlways respond in a polite, calm, and clear manner.\nKeep responses short and voice-friendly, and guide the user step by step."
+        }
+      },
+      {
+        "component_type": "local",
+        "component_id": "cf-component-1769547919512",
+        "else_edge": {
+          "destination_node_id": "node-1769967865439",
+          "id": "component-node-1769624967790-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Order Status",
+        "edges": [],
+        "id": "component-node-1769624967790",
+        "type": "component",
+        "display_position": {
+          "x": 562.0057067871094,
+          "y": -535.9829483032227
+        }
+      },
+      {
+        "component_type": "local",
+        "component_id": "cf-component-1769550365773",
+        "else_edge": {
+          "destination_node_id": "node-1769967865439",
+          "id": "component-node-1769624968500-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Cancel Order",
+        "edges": [],
+        "id": "component-node-1769624968500",
+        "type": "component",
+        "display_position": {
+          "x": 558.0057067871094,
+          "y": -323.98294830322266
+        }
+      },
+      {
+        "name": "End Call",
+        "id": "node-1769625165310",
+        "type": "end",
+        "speak_during_execution": true,
+        "display_position": {
+          "x": 1544.0057067871094,
+          "y": -259.98294830322266
+        },
+        "instruction": {
+          "type": "prompt",
+          "text": "Thank you for using our service! Have a great day."
+        }
+      },
+      {
+        "component_type": "local",
+        "component_id": "cf-component-1769883034130",
+        "else_edge": {
+          "destination_node_id": "node-1769967865439",
+          "id": "component-node-1769885208980-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Return Order",
+        "edges": [],
+        "id": "component-node-1769885208980",
+        "type": "component",
+        "display_position": {
+          "x": 582.0057067871094,
+          "y": -93.98294830322266
+        }
+      },
+      {
+        "component_type": "local",
+        "component_id": "cf-component-1769726351992",
+        "else_edge": {
+          "destination_node_id": "node-1769967865439",
+          "id": "component-node-1769953147508-else-edge",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "name": "Refund Order",
+        "edges": [],
+        "id": "component-node-1769953147508",
+        "type": "component",
+        "display_position": {
+          "x": 572.0057067871094,
+          "y": 138.01705169677734
+        }
+      },
+      {
+        "name": "Logic Split Node",
+        "edges": [
+          {
+            "destination_node_id": "node-1769274772679",
+            "id": "edge-1769967871472-x9o2ek47j",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "user said yes"
+            }
+          },
+          {
+            "destination_node_id": "node-1769625165310",
+            "id": "edge-1769967873294-c4vvr6p4m",
+            "transition_condition": {
+              "type": "prompt",
+              "prompt": "user said no"
+            }
+          }
+        ],
+        "id": "node-1769967865439",
+        "else_edge": {
+          "id": "edge-1769967865439-zvqv7z4is",
+          "transition_condition": {
+            "type": "prompt",
+            "prompt": "Else"
+          }
+        },
+        "type": "branch",
+        "display_position": {
+          "x": 1102.0057067871094,
+          "y": -393.98294830322266
+        }
+      }
+    ],
+    "components": [
+      {
+        "start_node_id": "conversation-1769547919514",
+        "nodes": [
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769548480144",
+                "id": "conversation-1769547919514-edge-1769548609561-i0b2v2l9p",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769547919514",
+            "type": "conversation",
+            "display_position": {
+              "x": -164.85714285714286,
+              "y": -384.8571428571429
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Ask the user politely for their order number so you can check the order status.\n\nIf the user provides an order number, store it as a variable called \"order_id\".\nand always store \"track order\" as a variable called \"intent\"\n\nBe calm, friendly, and concise"
+            }
+          },
+          {
+            "name": "Exit Component",
+            "id": "component-end-1769547919514",
+            "type": "end",
+            "speak_during_execution": false,
+            "display_position": {
+              "x": 1530.2219467163086,
+              "y": -62
+            },
+            "instruction": {
+              "type": "static_text",
+              "text": "Component completed"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769547919514",
+                "id": "edge-1769548473215",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769548473215",
+            "type": "conversation",
+            "display_position": {
+              "x": 1102.7997819870027,
+              "y": 225.15654211607819
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m sorry, \n{{ $json.message }}\n\nPlease check your order number and try again,"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769547919514",
+                "id": "edge-1769548473769",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Yes / I want to track again"
+                }
+              },
+              {
+                "destination_node_id": "component-end-1769547919514",
+                "id": "conversation-1769548473769-edge-1769549193422-954bfre5o",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "No / That\u2019s all / Thanks"
+                }
+              }
+            ],
+            "id": "conversation-1769548473769",
+            "type": "conversation",
+            "display_position": {
+              "x": 1072.6603736762163,
+              "y": -373.71371956392386
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Great! I\u2019ve found your order. \n{{ $json.message }}\n\nDo you want to track another order, or is there anything else I can help you with?\n"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769548550751",
+                "id": "conversation-1769548474441-edge-1769964611712-mj575bl8v",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769548474441",
+            "type": "conversation",
+            "display_position": {
+              "x": 667.6962030174211,
+              "y": 165.0971730503464
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m sorry, I didn\u2019t get a valid order number. \nCould you please provide your order number or the email/phone linked to your order so I can check it for you?\n"
+            }
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "node-1769548487943",
+                "id": "node-1769548480144-edge-1769548677391-yujhtap6u",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the user provides their order number or a valid identifier for the order.\n"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769548474441",
+                "id": "node-1769548480144-edge-1769548679007-2kw984n4u",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the user does not provide an order number, provides unclear information, or asks for help.\n"
+                }
+              }
+            ],
+            "id": "node-1769548480144",
+            "else_edge": {
+              "id": "else-edge-1769548480144",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": 271.6613552121166,
+              "y": -77.78280519166302
+            }
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769548473769",
+                "id": "node-1769548481240-edge-1769548720799-2c4v1hvkz",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the order status was successfully retrieved.\n"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769548473215",
+                "id": "node-1769548481240-edge-1769548722311-46ihz0ngg",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the order ID is invalid or the order could not be found.\n"
+                }
+              }
+            ],
+            "id": "node-1769548481240",
+            "else_edge": {
+              "id": "else-edge-1769548481240",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": 667.183742212582,
+              "y": -182.5570115340622
+            }
+          },
+          {
+            "variables": [
+              {
+                "name": "order_id",
+                "description": "id of the order",
+                "type": "number",
+                "choices": []
+              },
+              {
+                "name": "intent",
+                "description": "extracted from the conversation",
+                "type": "string",
+                "choices": []
+              }
+            ],
+            "else_edge": {
+              "id": "else-edge-1769548487943",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "name": "Extract Variables",
+            "edges": [
+              {
+                "destination_node_id": "node-1769548550751",
+                "id": "edge-1769548487943",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transitition when order id extract "
+                }
+              }
+            ],
+            "id": "node-1769548487943",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+              "x": 184.43364079015964,
+              "y": -572.8137616160855
+            }
+          },
+          {
+            "tool_id": "tool-1769548547263",
+            "name": "Check Order",
+            "edges": [
+              {
+                "destination_node_id": "node-1769548481240",
+                "id": "node-1769548550751-edge-1769548710223-avl65s6kz",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "node-1769548550751",
+            "type": "function",
+            "display_position": {
+              "x": 657.2047559990338,
+              "y": -530.4959263473423
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          }
+        ],
+        "user_modified_timestamp": 1770919815210,
+        "name": "Order Status",
+        "conversation_flow_component_id": "cf-component-1769547919512",
+        "tools": [
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769548547263",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "check_order",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "user_message",
+                "Phone_no",
+                "email"
+              ],
+              "properties": {
+                "user_message": {
+                  "type": "string",
+                  "description": "The original user message"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "The order ID extracted from the user conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "The intent extracted from the user conversation"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "The detected email from the cconversation"
+                },
+                "Phone_no": {
+                  "type": "string",
+                  "description": "The detected phone no from the conversation"
+                }
+              }
+            }
+          }
+        ],
+        "begin_tag_display_position": {
+          "x": -225.21147918701172,
+          "y": -76
+        }
+      },
+      {
+        "start_node_id": "conversation-1769550365773",
+        "nodes": [
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769967492240",
+                "id": "conversation-1769550365773-edge-1769891450954-894nixlxh",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769550365773",
+            "type": "conversation",
+            "display_position": {
+              "x": -248,
+              "y": -346
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Ask the user politely for their order number so you can cancel their order and also ask user why they want to cancel the order.\n\nIf the user provides an order number, store it as a variable called \"order_id\".\n\nBe calm, friendly, and concise"
+            }
+          },
+          {
+            "name": "Exit Component",
+            "id": "component-end-1769550365773",
+            "type": "end",
+            "display_position": {
+              "x": 1294.3213691711426,
+              "y": 372
+            },
+            "instruction": {
+              "type": "static_text",
+              "text": "Component completed"
+            }
+          },
+          {
+            "variables": [
+              {
+                "name": "order_id",
+                "description": "id of the order",
+                "type": "number",
+                "choices": []
+              },
+              {
+                "name": "intent",
+                "description": "detect intent like order status, cancel order, refund/return status from the conversation",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "reason",
+                "description": "from the description find the reason of cancelling the order.",
+                "type": "string",
+                "choices": []
+              }
+            ],
+            "else_edge": {
+              "id": "else-edge-1769550458372",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "name": "Extract Variables",
+            "edges": [
+              {
+                "destination_node_id": "node-1769891694242",
+                "id": "edge-1769550458372",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transitition when order id , reason and intent extract "
+                }
+              }
+            ],
+            "id": "node-1769550458372",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+              "x": 131.1956210113044,
+              "y": -445.9115549072815
+            }
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769891854936",
+                "id": "node-1769550592148-edge-1769550595332-449p8vcla",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order can be cancel"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769891821209",
+                "id": "node-1769550592148-edge-1769550597252-kz37gbxyg",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order can't be cancel"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769550794611",
+                "id": "node-1769550592148-edge-1769891778534-onmbbc13i",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order was not found with the given information."
+                }
+              }
+            ],
+            "id": "node-1769550592148",
+            "else_edge": {
+              "id": "else-edge-1769550592148",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": 507.5859240452023,
+              "y": -250.099000231599
+            }
+          },
+          {
+            "tool_id": "tool-1769550697516",
+            "name": "Cancel Order Initiated",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769551119251",
+                "id": "node-1769550773012-edge-1769550840812-3lc1ub975",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the order  was cancelled"
+                }
+              }
+            ],
+            "id": "node-1769550773012",
+            "type": "function",
+            "display_position": {
+              "x": 890.3161038163819,
+              "y": -232.53469879882346
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769550365773",
+                "id": "conversation-1769550794611-edge-1769967753488-y1ssoqy9o",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769550794611",
+            "type": "conversation",
+            "display_position": {
+              "x": 543.6295925886006,
+              "y": 158.04244455583444
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "sorry! I couldn't find your order.\nDo you need help with anything else?"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769550365773",
+                "id": "edge-1769551119251",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769551119251",
+            "type": "conversation",
+            "display_position": {
+              "x": 1239.8824787193523,
+              "y": -326.09233603930204
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "{{ $json.message }}\n\nI have cancelled your order and you will soon get an email of your order cancellation.\n\nIs there anything else I can help you with?"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1770482783394",
+                "id": "edge-1769891481514",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user give either phone no or email. also reason extracted"
+                }
+              }
+            ],
+            "id": "conversation-1769891481514",
+            "type": "conversation",
+            "display_position": {
+              "x": 144.88269341458397,
+              "y": 11.150426678152428
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m sorry, I didn\u2019t get a valid order number. \nCould you please provide your order number or the email/phone linked to your order so I can check it for you? also the reason for cancelling.\n"
+            }
+          },
+          {
+            "tool_id": "tool-1769891691025",
+            "name": "Cancel Order Status",
+            "edges": [
+              {
+                "destination_node_id": "node-1769550592148",
+                "id": "node-1769891694242-edge-1769891710041-c2brqexka",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "node-1769891694242",
+            "type": "function",
+            "display_position": {
+              "x": 499.31215891805675,
+              "y": -492.187888107252
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769550365773",
+                "id": "edge-1769891821209",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769891821209",
+            "type": "conversation",
+            "display_position": {
+              "x": 886.8325901520715,
+              "y": 49.38642504161106
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Sorry\n!{{ $json.cancelMessage }}.\n\nLet me know if you\u2019d like help with anything else."
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769550773012",
+                "id": "edge-1769891854936",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user want to cancel"
+                }
+              }
+            ],
+            "id": "conversation-1769891854936",
+            "type": "conversation",
+            "display_position": {
+              "x": 868.6322817183891,
+              "y": -624.2145449864621
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Great Your \n{{ $json.cancelMessage }}\ndo you want to cancel your order?"
+            }
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "node-1769550458372",
+                "id": "node-1769967492240-edge-1769967529176-tvyfw8vp5",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the user provides their order number and reason \n"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769891481514",
+                "id": "node-1769967492240-edge-1769967530984-6ey7yhk7a",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when the user does not provide an order number, provides unclear information, or asks for help.\n"
+                }
+              }
+            ],
+            "id": "node-1769967492240",
+            "else_edge": {
+              "id": "else-edge-1769967492240",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": -221.72206483972678,
+              "y": 122.6040758576928
+            }
+          },
+          {
+            "variables": [
+              {
+                "name": "phone_no",
+                "description": "no of the user",
+                "type": "number",
+                "choices": []
+              },
+              {
+                "name": "email",
+                "description": "extract the email address from the user conversation. e.g abc/123@gmail.com",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "reason ",
+                "description": "reason for cancelling",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "intent",
+                "description": "extracted intent from cinversation.",
+                "type": "string",
+                "choices": []
+              }
+            ],
+            "else_edge": {
+              "id": "else-edge-1770482783394",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "name": "Extract Variables",
+            "edges": [
+              {
+                "destination_node_id": "node-1769891694242",
+                "id": "node-1770482783394-edge-1770487077155-y0nd6q3e5",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when phone no or email is extracted. intent and reason are extracted."
+                }
+              }
+            ],
+            "id": "node-1770482783394",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+              "x": 146.35417375413522,
+              "y": 372.5761862046938
+            }
+          }
+        ],
+        "user_modified_timestamp": 1770919844235,
+        "name": "Cancel Order",
+        "conversation_flow_component_id": "cf-component-1769550365773",
+        "tools": [
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "to initiate the cancellation of order",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769550697516",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "cancel_order_initiated",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "date",
+                "reason",
+                "order_id",
+                "intent",
+                "cancellation_initiated",
+                "email",
+                "phone_no"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "description": "Date of cancel order"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "The detected reason from the description."
+                },
+                "phone_no": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "The order ID extracted from the user conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "The detected user intent"
+                },
+                "cancellation_initiated": {
+                  "type": "string",
+                  "description": "yes"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                }
+              }
+            }
+          },
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "check the status of order to see if order can be cancelled or not",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769891691025",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "cancel_order_status",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "reason",
+                "phone_no",
+                "email"
+              ],
+              "properties": {
+                "reason": {
+                  "type": "string",
+                  "description": "extracted reason from the conversation"
+                },
+                "phone_no": {
+                  "type": "string",
+                  "description": "extracted phone no from the conversation"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "extracted order id from the conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "extracted intent from the conversation"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                }
+              }
+            }
+          }
+        ],
+        "begin_tag_display_position": {
+          "x": -378.85875701904297,
+          "y": 130
+        }
+      },
+      {
+        "name": "Refund Order",
+        "start_node_id": "conversation-1769726351992",
+        "conversation_flow_component_id": "cf-component-1769726351992",
+        "nodes": [
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769950675197",
+                "id": "conversation-1769726351992-edge-1769950798007-xfz5oc8wx",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order id is provided"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769950852599",
+                "id": "conversation-1769726351992-edge-1769951158750-8foz05116",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order id is provided"
+                }
+              }
+            ],
+            "id": "conversation-1769726351992",
+            "type": "conversation",
+            "display_position": {
+              "x": 150,
+              "y": -232
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Hi, you\u2019ve reached the automated refund assistant. I\u2019ll help you with your order refund.\nPlease tell me your order number."
+            }
+          },
+          {
+            "name": "Exit Component",
+            "id": "component-end-1769726351992",
+            "type": "end",
+            "display_position": {
+              "x": 1401.142857142857,
+              "y": 74.57142857142858
+            },
+            "instruction": {
+              "type": "static_text",
+              "text": "Component completed"
+            }
+          },
+          {
+            "variables": [
+              {
+                "name": "intent",
+                "description": "detected intent from the conversation",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "order_id",
+                "description": "id of a order",
+                "type": "number",
+                "choices": []
+              }
+            ],
+            "else_edge": {
+              "id": "else-edge-1769950675197",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "name": "Extract Variables",
+            "edges": [
+              {
+                "destination_node_id": "node-1769950789990",
+                "id": "edge-1769950675197",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when both order id and intent are extracted."
+                }
+              }
+            ],
+            "id": "node-1769950675197",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+              "x": 521.1118273662305,
+              "y": -452.915647117866
+            }
+          },
+          {
+            "tool_id": "tool-1769950786590",
+            "name": "Refund Order Status",
+            "edges": [
+              {
+                "destination_node_id": "node-1769950861237",
+                "id": "node-1769950789990-edge-1769950893837-nt3ylrtsm",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "node-1769950789990",
+            "type": "function",
+            "display_position": {
+              "x": 538.6538212253474,
+              "y": -66.3014001478254
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "id": "edge-1769950852599",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769950852599",
+            "type": "conversation",
+            "display_position": {
+              "x": 164.80635599446111,
+              "y": 199.92377530688515
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Sorry! I didn't get order id can you please repeat it."
+            }
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769951305165",
+                "id": "node-1769950861237-edge-1769950865703-ah44kql6j",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order  can be refund"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769952320732",
+                "id": "node-1769950861237-edge-1769951210023-cw3z893oe",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order  can't  be refund"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769950904686",
+                "id": "node-1769950861237-edge-1769951839069-y53pcnvmn",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order can't be found"
+                }
+              }
+            ],
+            "id": "node-1769950861237",
+            "else_edge": {
+              "id": "else-edge-1769950861237",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": 557.9427215355934,
+              "y": 143.68411654862314
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "id": "edge-1769950904686",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769950904686",
+            "type": "conversation",
+            "display_position": {
+              "x": 1017.6538625262592,
+              "y": 274.6625565193382
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m sorry, I didn\u2019t get a valid order number. \nCould you please provide your order number or the email/phone linked to your order so I can check it for you?\n"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769951506493",
+                "id": "edge-1769951305165",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user said yes"
+                }
+              },
+              {
+                "destination_node_id": "component-end-1769726351992",
+                "id": "conversation-1769951305165-edge-1769951321182-zl47q5o8a",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user said no"
+                }
+              }
+            ],
+            "id": "conversation-1769951305165",
+            "type": "conversation",
+            "display_position": {
+              "x": 936.9908824906959,
+              "y": -485.39962892879583
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "{{ $json.message }}"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769726351992",
+                "id": "edge-1769951380020",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769951380020",
+            "type": "conversation",
+            "display_position": {
+              "x": 1338.6519330457802,
+              "y": -534.9970685703775
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "{{ $json.message }}"
+            }
+          },
+          {
+            "tool_id": "tool-1769951502950",
+            "name": "Refund Order Initiated",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769951380020",
+                "id": "node-1769951506493-edge-1769951517878-eusg7gucm",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "node-1769951506493",
+            "type": "function",
+            "display_position": {
+              "x": 990.0172435110342,
+              "y": -783.0062375787074
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769726351992",
+                "id": "edge-1769952320732",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769952320732",
+            "type": "conversation",
+            "display_position": {
+              "x": 980.5696617945987,
+              "y": -29.98087950995091
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "{{ $json.message }}"
+            }
+          }
+        ],
+        "user_modified_timestamp": 1770919895288,
+        "tools": [
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "check if the order can be refund",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769950786590",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "refund_order_status",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "Phone_no",
+                "email"
+              ],
+              "properties": {
+                "order_id": {
+                  "type": "string",
+                  "description": "extracted order id from the conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "extracted intent from the conversation"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                },
+                "Phone_no": {
+                  "type": "string",
+                  "description": "extracted phone no from the conversation"
+                }
+              }
+            }
+          },
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "refund initiated",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769951502950",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "refund_order_initiated",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "refund_initiated",
+                "refund_amount",
+                "phone_no",
+                "email"
+              ],
+              "properties": {
+                "refund_amount": {
+                  "type": "string",
+                  "description": "extracted refund amount from the conversation"
+                },
+                "phone_no": {
+                  "type": "string",
+                  "description": "extracted phone no from the conversation"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "extracted order id from the conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "extracted intent from the conversation"
+                },
+                "refund_initiated": {
+                  "type": "string",
+                  "description": "yes"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Return Order",
+        "start_node_id": "conversation-1769883034130",
+        "conversation_flow_component_id": "cf-component-1769883034130",
+        "nodes": [
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769883569520",
+                "id": "conversation-1769883034130-edge-1769883223412-fhhhxyfw7",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Transition when order_id is known AND return_reason is known AND item_condition is known\n"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769883440842",
+                "id": "conversation-1769883034130-edge-1769883351065-52lzxt2ty",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "order_id is missing OR return_reason is missing OR item_condition is missing\n"
+                }
+              }
+            ],
+            "id": "conversation-1769883034130",
+            "type": "conversation",
+            "display_position": {
+              "x": 78,
+              "y": -478
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Ask the user politely for their order number so you can process their return and also ask the user for the reason for the return and the condition of the item.\n\nIf the user provides an order number, store it as a variable called order_id.\nIf the user provides a reason, store it as return_reason.\nIf the user provides the item condition, store it as item_condition.\n\nIf the user says they do not have the order number, reassure them and ask for an alternative such as the email address or phone number used for the order.\n\nBe calm, friendly, and concise."
+            }
+          },
+          {
+            "name": "Exit Component",
+            "id": "component-end-1769883034130",
+            "type": "end",
+            "display_position": {
+              "x": 1402,
+              "y": 102
+            },
+            "instruction": {
+              "type": "static_text",
+              "text": "Component completed"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769883569520",
+                "id": "edge-1769883440842",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769883440842",
+            "type": "conversation",
+            "display_position": {
+              "x": 14.932115833461694,
+              "y": 287.91926506249183
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "\u201cI need a bit more info to process your return. Can you tell me your order number, reason for return, and the item condition?\u201d"
+            }
+          },
+          {
+            "variables": [
+              {
+                "name": "order_id",
+                "description": "id of the order",
+                "type": "number",
+                "choices": []
+              },
+              {
+                "name": "intent",
+                "description": "detect intent like return order from the conversation",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "reason",
+                "description": "from the description find the reason of returning the order.",
+                "type": "string",
+                "choices": []
+              },
+              {
+                "name": "item_condition",
+                "description": "from the conversation extract the condition of the item.",
+                "type": "string",
+                "choices": []
+              }
+            ],
+            "else_edge": {
+              "id": "else-edge-1769883569520",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "name": "Extract Variables",
+            "edges": [
+              {
+                "destination_node_id": "node-1769884380393",
+                "id": "edge-1769883569520",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when order id , reason, item condition and intent extract "
+                }
+              }
+            ],
+            "id": "node-1769883569520",
+            "type": "extract_dynamic_variables",
+            "display_position": {
+              "x": 469.55345521965353,
+              "y": -378.38196940741364
+            }
+          },
+          {
+            "tool_id": "tool-1769884169377",
+            "name": "Return Order Status",
+            "edges": [
+              {
+                "destination_node_id": "node-1769884434513",
+                "id": "node-1769884380393-edge-1769884522281-wnp8qtngo",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "node-1769884380393",
+            "type": "function",
+            "display_position": {
+              "x": 482.16434639575664,
+              "y": 82.54876536373814
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Logic Split",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769884537570",
+                "id": "node-1769884434513-edge-1769884497897-fg6ezp4pn",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order can be return"
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769884538353",
+                "id": "node-1769884434513-edge-1769884499129-oade6wusq",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order can't return."
+                }
+              },
+              {
+                "destination_node_id": "conversation-1769884995985",
+                "id": "node-1769884434513-edge-1769884966762-sx6ytb84w",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order was not found with the given information."
+                }
+              }
+            ],
+            "id": "node-1769884434513",
+            "else_edge": {
+              "id": "else-edge-1769884434513",
+              "transition_condition": {
+                "type": "prompt",
+                "prompt": "Else"
+              }
+            },
+            "type": "branch",
+            "display_position": {
+              "x": 492.49115943472316,
+              "y": 285.36697064951494
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769884891571",
+                "id": "edge-1769884537570",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user initiated return"
+                }
+              },
+              {
+                "destination_node_id": "component-end-1769883034130",
+                "id": "conversation-1769884537570-edge-1769884754020-ey7vlqjyk",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when user said no"
+                }
+              }
+            ],
+            "id": "conversation-1769884537570",
+            "type": "conversation",
+            "display_position": {
+              "x": 853.7963269790098,
+              "y": -459.29013273079585
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "Great news! \n\n{{ $json['return message'] }}\n\nJust let me know if you\u2019d like me to proceed."
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769883034130",
+                "id": "edge-1769884538353",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769884538353",
+            "type": "conversation",
+            "display_position": {
+              "x": 891.6428979881921,
+              "y": -60.90266158031716
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m really sorry,\n{{ $json['return message'] }}\nLet me know if you\u2019d like help with anything else."
+            }
+          },
+          {
+            "tool_id": "tool-1769884361401",
+            "name": "Return Order Initiated",
+            "edges": [
+              {
+                "destination_node_id": "conversation-1769885058369",
+                "id": "node-1769884891571-edge-1769885033433-8mub688a9",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "transition when the order is returned"
+                }
+              }
+            ],
+            "id": "node-1769884891571",
+            "type": "function",
+            "display_position": {
+              "x": 1208.9994998944103,
+              "y": -523.2140817049535
+            },
+            "tool_type": "local",
+            "speak_during_execution": false,
+            "wait_for_result": true
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "node-1769884380393",
+                "id": "edge-1769884995985",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "else"
+                }
+              }
+            ],
+            "id": "conversation-1769884995985",
+            "type": "conversation",
+            "display_position": {
+              "x": 924.8514465521848,
+              "y": 408.288600591199
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "I\u2019m sorry, I didn\u2019t get a valid order number. \nCould you please provide your order number or the email/phone linked to your order so I can check it for you?\n"
+            }
+          },
+          {
+            "name": "Conversation",
+            "edges": [
+              {
+                "destination_node_id": "component-end-1769883034130",
+                "id": "edge-1769885058369",
+                "transition_condition": {
+                  "type": "prompt",
+                  "prompt": "Describe the transition condition"
+                }
+              }
+            ],
+            "id": "conversation-1769885058369",
+            "type": "conversation",
+            "display_position": {
+              "x": 1356.2950154768428,
+              "y": -287.07310919409315
+            },
+            "instruction": {
+              "type": "prompt",
+              "text": "{{ $json.message }}\n\nIs there anything else I can help you with?"
+            }
+          }
+        ],
+        "user_modified_timestamp": 1770919869696,
+        "tools": [
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "check if the order can be returned or not",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769884169377",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "return_order_status",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "reason",
+                "item_condition",
+                "phone_no",
+                "email"
+              ],
+              "properties": {
+                "item_condition": {
+                  "type": "string",
+                  "description": "extracted item condition from the conversation"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "extracted reason from the conversation"
+                },
+                "phone_no": {
+                  "type": "string",
+                  "description": "extracted phone no from the conversation"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "extracted Order ID from the conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "extracted intent from the conversation"
+                },
+                "email": {
+                  "type": "string",
+                  "description": "extracted email from the conversation"
+                }
+              }
+            }
+          },
+          {
+            "headers": {},
+            "parameter_type": "form",
+            "method": "POST",
+            "query_params": {},
+            "description": "the initiation of the order ",
+            "type": "custom",
+            "url": "https://mc109.app.n8n.cloud/webhook/retell",
+            "tool_id": "tool-1769884361401",
+            "args_at_root": true,
+            "timeout_ms": 120000,
+            "name": "return_order_initiated",
+            "response_variables": {},
+            "parameters": {
+              "type": "object",
+              "required": [
+                "order_id",
+                "intent",
+                "reason",
+                "item_condition",
+                "return_initiated"
+              ],
+              "properties": {
+                "item_condition": {
+                  "type": "string",
+                  "description": "extracted item condition from the conversation"
+                },
+                "reason": {
+                  "type": "string",
+                  "description": "extracted reason id from the conversation"
+                },
+                "order_id": {
+                  "type": "string",
+                  "description": "extracted order id from the conversation"
+                },
+                "intent": {
+                  "type": "string",
+                  "description": "extracted intent from the conversation"
+                },
+                "return_initiated": {
+                  "type": "string",
+                  "description": "yes"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "start_node_id": "node-1769274772679",
+    "start_speaker": "agent",
+    "tools": [
+      {
+        "name": "refund_order",
+        "description": "",
+        "tool_id": "tool-1735258495443",
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "The id of the order to refund."
+            }
+          },
+          "required": [
+            "order_id"
+          ]
+        },
+        "url": "https://api.retellai.com/random_status"
+      },
+      {
+        "headers": {},
+        "parameter_type": "form",
+        "tool_id": "tool-1736319030065",
+        "query_params": {},
+        "args_at_root": true,
+        "timeout_ms": 120000,
+        "name": "check_order",
+        "description": "Check order status given an order id.",
+        "response_variables": {},
+        "type": "custom",
+        "parameters": {
+          "type": "object",
+          "required": [
+            "order_id",
+            "intent",
+            "user_message"
+          ],
+          "properties": {
+            "order_id": {
+              "type": "string",
+              "description": "The order ID extracted from the user conversation"
+            },
+            "intent": {
+              "type": "string",
+              "description": "The detected user intent"
+            },
+            "user_message": {
+              "type": "string",
+              "description": "The original user message"
+            }
+          }
+        },
+        "url": "https://aiengr.app.n8n.cloud/webhook/retell"
+      }
+    ],
+    "model_choice": {
+      "type": "cascading",
+      "model": "gpt-4.1-nano",
+      "high_priority": false
+    },
+    "knowledge_base_ids": [],
+    "begin_tag_display_position": {
+      "x": -50,
+      "y": 79
+    },
+    "is_published": false
+  }
+}
