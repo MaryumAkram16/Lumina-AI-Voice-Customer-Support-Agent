@@ -1,0 +1,2617 @@
+{
+  "name": "Lumina  AI Voice Customer Support Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Get rows returned from Google Sheets Node\nconst rows = $items(\"Fetch Order Records\");\n\n// Get order ID from input safely\nconst orderId = $json[\"order_id\"] || $json[\"OrderID\"] || $input?.order_id || null;\n\n// If no order ID provided\nif (!orderId) {\n  return [{\n    json: {\n      success: false,\n      intent: \"order_tracking\",\n      message: \"I\u2019m sorry, I didn\u2019t get the Order ID. Please provide a valid Order ID to track your order.\",\n      order_id: null\n    }\n  }];\n}\n\n// If no rows found from Google Sheets\nif (!rows || rows.length === 0) {\n  return [{\n    json: {\n      success: false,\n      intent: \"order_tracking\",\n      message: `I couldn\u2019t find any orders in the database for Order ID ${orderId}.`,\n      order_id: orderId\n    }\n  }];\n}\n\n// Find the exact order\nconst orderRow = rows.find(row => row.json.OrderID == orderId);\n\nif (!orderRow) {\n  return [{\n    json: {\n      success: false,\n      intent: \"order_tracking\",\n      message: `I\u2019m sorry, I couldn\u2019t find an order with ID ${orderId}. Please check the ID and try again.`,\n      order_id: orderId\n    }\n  }];\n}\n\n// Row found \u2192 return full tracking info with conversational format\nconst deliveryDateFormatted = new Date(orderRow.json.Delivery).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });\n\nreturn [{\n  json: {\n    success: true,\n    intent: \"order_tracking\",\n    message: `Hi ${orderRow.json.CustomerName}! \ud83d\udc4b\\n\\n` +\n             `Your order *${orderRow.json.OrderID}* is currently *${orderRow.json.Status}*.\\n` +\n             `Carrier: ${orderRow.json.Carrier}\\n` +\n             `Delivery Location: ${orderRow.json.DeliveryLocation}\\n` +\n             `Expected Delivery: ${deliveryDateFormatted}\\n` +\n             `Progress so far: ${orderRow.json.TrackingSteps}\\n\\n` +\n             `If you want, I can send these details to your phone via SMS.`,\n\n    // Extra fields for logic in flow (optional)\n    order_id: orderRow.json.OrderID,\n    customer_name: orderRow.json.CustomerName,\n    order_status: orderRow.json.Status,\n    delivery_date: orderRow.json.Delivery,\n    tracking_steps: orderRow.json.TrackingSteps,\n    carrier: orderRow.json.Carrier,\n    delivery_location: orderRow.json.DeliveryLocation,\n    phone: orderRow.json.PhoneNo,\n    email: orderRow.json.Email,\n    sms_sent: orderRow.json.SMSSent\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -112
+      ],
+      "id": "e96cabc0-5d14-4297-b67d-e08cb7af688b",
+      "name": "Build Order Tracking Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d587e11e-f5be-4106-9292-b0888c5b509c",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -192,
+        -112
+      ],
+      "id": "4703b2ab-6f59-4f76-b222-f02f21527d13",
+      "name": "Prepare Message for Response"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        -112
+      ],
+      "id": "dc115618-ec2b-4f7c-aaaa-93456a7814ed",
+      "name": "Send Order Tracking Response"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "1g6Z1NKnqHHn4hgn3mI2bmL6ubAEpVottP_OA_oGwvKQ",
+          "mode": "list",
+          "cachedResultName": "Check Order Status",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1g6Z1NKnqHHn4hgn3mI2bmL6ubAEpVottP_OA_oGwvKQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1g6Z1NKnqHHn4hgn3mI2bmL6ubAEpVottP_OA_oGwvKQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.body.order_id }}"
+            },
+            {
+              "lookupColumn": "PhoneNo",
+              "lookupValue": "={{ $json.body.Phone_no }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.body.email }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -592,
+        -112
+      ],
+      "id": "f1da3aa3-a51d-429d-9755-9636fad8fd15",
+      "name": "Fetch Order Records",
+      "alwaysOutputData": true,
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retell",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1280,
+        416
+      ],
+      "id": "8c36b506-a7b1-4888-9aeb-51b990917d2f",
+      "name": "Incoming Voice Agent Request (Retell Webhook)",
+      "webhookId": "66ee2286-e6c8-40dc-9f69-f6f063d91025"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.intent }}",
+                    "rightValue": "track order",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "abecd0de-784c-47f0-9803-61d806f5d18a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Check Order Status"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "18928805-dbe8-468d-95a7-8cbb6f5ed198",
+                    "leftValue": "={{ $json.body.intent }}",
+                    "rightValue": "cancel order",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Cancel Order"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a83a650c-3c80-4c35-9f5f-9d0612ee3d68",
+                    "leftValue": "={{ $json.body.intent }}",
+                    "rightValue": "return",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Return Order"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0173ec63-4ee7-472d-a4ab-85d093596a6a",
+                    "leftValue": "={{ $json.body.intent }}",
+                    "rightValue": "refund",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Refund Order"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        -32
+      ],
+      "id": "6dfa8511-ddbc-4010-b244-8b678ea8d48a",
+      "name": "Route by User Intent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "abd72bb4-f2cd-46d8-9348-13192cf6225c",
+              "leftValue": "={{ $json.body.cancellation_initiated }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -608,
+        160
+      ],
+      "id": "d6924537-2dba-4062-a965-296997ec4ba6",
+      "name": "Cancellation Initiated?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe96bea5-0fb0-48c1-a127-6a3d7680fa7b",
+              "name": "reason",
+              "value": "={{ $json.body.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "4c182559-13e7-45cf-b6cb-235d4b580711",
+              "name": "OrderID",
+              "value": "={{ $json.body.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "d4f48ce4-40a2-44d9-b77d-7a43fdcd4ee7",
+              "name": "intent",
+              "value": "={{ $json.body.intent }}",
+              "type": "string"
+            },
+            {
+              "id": "5e175b18-07f4-4695-b1be-6fe0921958b6",
+              "name": "status",
+              "value": "cancelled",
+              "type": "string"
+            },
+            {
+              "id": "ba7e110a-3950-4924-8d96-6bbecce40751",
+              "name": "CancelledDate",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -352,
+        96
+      ],
+      "id": "d1b64af8-9334-49f3-82bb-ead8ee1ad088",
+      "name": "Prepare Cancellation Details"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E",
+          "mode": "list",
+          "cachedResultName": "Cancel Order",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "OrderID": "={{ $json.OrderID }}",
+            "Reason": "={{ $json.reason }}",
+            "CancelDate": "={{ $json.CancelledDate }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "OrderID"
+          ],
+          "schema": [
+            {
+              "id": "OrderID",
+              "displayName": "OrderID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CustomerName",
+              "displayName": "CustomerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CancelDate",
+              "displayName": "CancelDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "item",
+              "displayName": "item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "deliveryDate",
+              "displayName": "deliveryDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PhoneNo",
+              "displayName": "PhoneNo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -160,
+        96
+      ],
+      "id": "4a75b16f-4dc1-4c00-bfbd-02dcd391ad4d",
+      "name": "Update Order as Cancelled (Google Sheets)",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E",
+          "mode": "list",
+          "cachedResultName": "Cancel Order",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.OrderID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        48,
+        96
+      ],
+      "id": "95758951-424f-4b26-b738-6766744cb4c2",
+      "name": "Fetch Cancelled Order Record",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Read values directly from the current item\nconst orderId = $json.OrderID || \"your order\";\nconst canceledDate = $json.CancelDate || new Date().toISOString();\n\n// Format date nicely\nconst formattedDate = new Date(canceledDate).toLocaleDateString(\"en-GB\", {\n  day: \"2-digit\",\n  month: \"short\",\n  year: \"numeric\"\n});\n\n// Friendly, natural message\nreturn [\n  {\n    json: {\n      message: `Just a heads-up \u2014 your order (${orderId}) was cancelled on ${formattedDate}.\nIf this wasn\u2019t on purpose or you need help, we\u2019re always here.`,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        96
+      ],
+      "id": "f20ecd4a-ffb2-4fe3-b475-d40d7875bce0",
+      "name": "Build Cancellation Confirmation Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200,
+          "enableStreaming": false
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        480,
+        96
+      ],
+      "id": "26cb9254-6d53-4fb5-9f2e-ac25945f0bdb",
+      "name": "Send Cancellation Confirmation",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E",
+          "mode": "list",
+          "cachedResultName": "Cancel Order",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/15IapCg9PqoL6G1xtyXqMtJCduCBWz9F1qaimGw0Qw3E/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.body.order_id }}"
+            },
+            {
+              "lookupColumn": "PhoneNo",
+              "lookupValue": "={{ $json.body.phone_no }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.body.email }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -352,
+        288
+      ],
+      "id": "9c3a935b-cfc3-44e8-b4e3-17d49fd4f1c6",
+      "name": "Fetch Order for Cancellation Check",
+      "alwaysOutputData": true,
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1\ufe0f\u20e3 Handle order not found or empty input\nif (\n  !items ||\n  items.length === 0 ||\n  !items[0].json ||\n  Object.keys(items[0].json).length === 0\n) {\n  return [\n    {\n      json: {\n        orderFound: false,\n        canCancel: false,\n        cancelMessage: \"Order not found.\"\n      }\n    }\n  ];\n}\n\n// Extract order\nconst order = items[0].json;\n\n// 2\ufe0f\u20e3 Check if deliveryDate exists (exact property name)\nif (!order.deliveryDate || order.deliveryDate.trim() === \"\") {\n  return [\n    {\n      json: {\n        ...order,\n        orderFound: true,\n        canCancel: false,\n        cancelMessage: \"Delivery date is missing. Cannot cancel order.\"\n      }\n    }\n  ];\n}\n\n// 3\ufe0f\u20e3 Parse deliveryDate (DD-MM-YY)\nconst parts = order.deliveryDate.split(\"-\");\nif (parts.length !== 3) {\n  return [\n    {\n      json: {\n        ...order,\n        orderFound: true,\n        canCancel: false,\n        cancelMessage: \"Delivery date format is invalid. Cannot cancel order.\"\n      }\n    }\n  ];\n}\n\nconst [day, month, year] = parts.map(Number);\nconst deliveryDate = new Date(2000 + year, month - 1, day);\ndeliveryDate.setHours(0, 0, 0, 0); // normalize to midnight\n\n// 4\ufe0f\u20e3 Get today's date\nconst today = new Date();\ntoday.setHours(0, 0, 0, 0);\n\n// 5\ufe0f\u20e3 Determine if order can be cancelled\nlet canCancel = false;\nlet cancelMessage = \"\";\n\nif (today.getTime() === deliveryDate.getTime()) {\n  canCancel = true;\n  cancelMessage = \"Order can be cancelled today.\";\n} else if (today.getTime() < deliveryDate.getTime()) {\n  canCancel = true;\n  cancelMessage = \"Order can be cancelled before the delivery date.\";\n} else {\n  canCancel = false;\n  cancelMessage = \"Order cannot be cancelled. Cancellation period has passed.\";\n}\n\n// 6\ufe0f\u20e3 Return response\nreturn [\n  {\n    json: {\n      ...order,\n      orderFound: true,\n      deliveryDate: deliveryDate.toISOString().split(\"T\")[0],\n      canCancel,\n      cancelMessage\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        288
+      ],
+      "id": "8aa0c31d-6a90-4efc-a261-e47b3e990286",
+      "name": "Check Cancellation Eligibility"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e6642e3-9562-453a-b3fe-73fdf2ebf0a7",
+              "name": "cancelMessage",
+              "value": "={{ $json.cancelMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        16,
+        288
+      ],
+      "id": "d5e2470e-4b4d-44f7-9895-6e4a68ea9586",
+      "name": "Prepare Cancellation Status Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        208,
+        288
+      ],
+      "id": "83b78874-20f1-4724-9659-71fcb9fe153c",
+      "name": "Send Cancellation Eligibility Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7907b4f9-e27f-4ed3-bc4a-4ba89ab9fbda",
+              "leftValue": "={{ $json.body.return_initiated }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -544,
+        512
+      ],
+      "id": "6cc39af1-b3e2-4beb-9a41-515918208b0c",
+      "name": "Is Return Initiated by User?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "04cde462-23e1-4bbf-991c-e248a3ca670e",
+              "name": "OrderID",
+              "value": "={{ $json.body.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4895893-84a5-4098-a14d-a85e9f51e31a",
+              "name": "ItemCondition",
+              "value": "={{ $json.body.item_condition }}",
+              "type": "string"
+            },
+            {
+              "id": "95335313-6269-410c-bc9e-c9298b58a4c0",
+              "name": "Reason",
+              "value": "={{ $json.body.reason }}",
+              "type": "string"
+            },
+            {
+              "id": "4a58f5ab-9cf7-4d86-afe0-ee13d78b60db",
+              "name": "ReturnInitiated",
+              "value": "={{ $now }}",
+              "type": "string"
+            },
+            {
+              "id": "00c3f620-ec84-433c-8655-3ea197b97172",
+              "name": "ReturnStatus",
+              "value": "initiated",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        496
+      ],
+      "id": "f81e1521-f2e0-41c1-9ba4-5b1558093526",
+      "name": "Capture Return Request Details"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "OrderID": "={{ $json.OrderID }}",
+            "ReturnReason": "={{ $json.Reason }}",
+            "ItemCondition": "={{ $json.ItemCondition }}",
+            "ReturnStatus": "={{ $json.ReturnStatus }}",
+            "ReturnInitiate": "={{ $json.ReturnInitiated }}"
+          },
+          "matchingColumns": [
+            "OrderID"
+          ],
+          "schema": [
+            {
+              "id": "OrderID",
+              "displayName": "OrderID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CustomerName",
+              "displayName": "CustomerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundAmount",
+              "displayName": "RefundAmount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundStatus",
+              "displayName": "RefundStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundDate",
+              "displayName": "RefundDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReturnStatus",
+              "displayName": "ReturnStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReturnReason",
+              "displayName": "ReturnReason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Item",
+              "displayName": "Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Delivery",
+              "displayName": "Delivery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ItemCondition",
+              "displayName": "ItemCondition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ReturnInitiate",
+              "displayName": "ReturnInitiate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price",
+              "displayName": "Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PhoneNo",
+              "displayName": "PhoneNo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -32,
+        496
+      ],
+      "id": "f1afcc6d-b4f7-4d6b-932b-b2a9e66ce8ba",
+      "name": "Save Return Request (Google Sheets)",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.OrderID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        176,
+        496
+      ],
+      "id": "7eca6990-008e-42d6-9ae6-6684023870de",
+      "name": "Fetch Updated Return Record",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data\nconst data = items[0].json;\n\n// Format date nicely (optional but recommended)\nconst deliveryDate = data.Delivery;\nconst returnDate = new Date(data.ReturnInitiate).toLocaleDateString();\n\n// Build user message\nconst message = `\u2705 Your return has been successfully initiated.\n\nHere are the details:\n\u2022 Order ID: ${data.OrderID}\n\u2022 Item: ${data.Item}\n\u2022 Item condition: ${data.ItemCondition}\n\u2022 Return reason: ${data.ReturnReason}\n\u2022 Delivered on: ${deliveryDate}\n\u2022 Return initiated on: ${returnDate}\n\nOur team will contact you soon to arrange the pickup. Thank you for your patience.`;\n\n// Return output\nreturn [\n  {\n    json: {\n      message,\n    \n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        496
+      ],
+      "id": "6e04eddd-b1ce-4859-aa31-e656abe90425",
+      "name": "Build Return Confirmation Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        496
+      ],
+      "id": "4b27ee8e-1509-4d51-bc1e-ad336a90f6db",
+      "name": "Send Return Confirmation to User"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.body.order_id }}"
+            },
+            {
+              "lookupColumn": "PhoneNo",
+              "lookupValue": "={{ $json.body.phone_no }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.body.email }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -336,
+        752
+      ],
+      "id": "ec70ce46-63a9-40ed-9171-25fe3ce23a2e",
+      "name": "Fetch Order for Return Eligibility",
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle order not found or empty response\nif (\n  !items ||\n  items.length === 0 ||\n  !items[0].json ||\n  Object.keys(items[0].json).length === 0\n) {\n  return [\n    {\n      json: {\n        orderFound: false,\n        canReturn: false,\n        returnMessage: \"Order not found.\"\n      }\n    }\n  ];\n}\n\n// Extract order\nconst order = items[0].json;\n\n// Return policy in days\nconst RETURN_POLICY_DAYS = 14;\n\n// Get today's date\nconst today = new Date();\n\n// Check delivery date\nif (!order.Delivery) {\n  return [\n    {\n      json: {\n        ...order,\n        orderFound: true,\n        canReturn: false,\n        returnMessage: \"Delivery date is missing. Unable to process return.\"\n      }\n    }\n  ];\n}\n\n// Parse Delivery date (DD-MM-YY)\nconst [day, month, year] = order.Delivery.split('-');\nconst deliveryDate = new Date(`20${year}`, month - 1, day);\n\n// Calculate difference in days\nconst diffTime = today - deliveryDate;\nconst diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));\n\n// Check return eligibility\nconst canReturn = diffDays <= RETURN_POLICY_DAYS;\n\nreturn [\n  {\n    json: {\n      ...order,\n      orderFound: true,\n      canReturn,\n      daysSinceDelivery: diffDays,\n      returnMessage: canReturn\n        ? \"Order is eligible for return.\"\n        : \"Return period has expired.\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        752
+      ],
+      "id": "15068c43-160e-40d9-bb3c-c3cdb979b187",
+      "name": "Evaluate Return Eligibility Policy"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6d53ea37-b1a2-4441-9320-c0e2446a273b",
+              "name": "return message",
+              "value": "={{ $json.returnMessage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        752
+      ],
+      "id": "0ed4ee1b-76b9-43b5-bcba-e5fb6c198b0d",
+      "name": "Prepare Return Eligibility Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        752
+      ],
+      "id": "a478ab0c-b501-4124-a7ad-0c3cd446860a",
+      "name": "Send Return Eligibility Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6aeda702-e149-4a34-a99e-1bea54519736",
+              "leftValue": "={{ $json.body.refund_initiated }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -784,
+        1040
+      ],
+      "id": "b85016d4-d9cd-46c2-b39d-9c2d1504443c",
+      "name": "Is Refund Initiated by User?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34101a20-a6e1-486f-ad63-d123b7e5e3dd",
+              "name": "OrderID",
+              "value": "={{ $json.body.args.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9098243e-9827-4a9f-95dc-578ba17e097e",
+              "name": "RefundAmount",
+              "value": "={{ $json.body.args.refund_amount }}",
+              "type": "string"
+            },
+            {
+              "id": "2318fef5-54d7-48ea-8857-e1eb90e8c377",
+              "name": "RefundStatus",
+              "value": "initiated",
+              "type": "string"
+            },
+            {
+              "id": "4dd5c090-4ab2-4550-bdfa-d405fe4e07fc",
+              "name": "RefundDate",
+              "value": "={{ $now }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -528,
+        928
+      ],
+      "id": "7078c7b3-d5bd-40a7-934b-d9f53f338f91",
+      "name": "Capture Refund Request Details"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "RefundAmount": "={{ $json.RefundAmount }}",
+            "RefundStatus": "={{ $json.RefundStatus }}",
+            "RefundDate": "={{ $json.RefundDate }}",
+            "OrderID": "={{ $json.OrderID }}"
+          },
+          "matchingColumns": [
+            "OrderID"
+          ],
+          "schema": [
+            {
+              "id": "OrderID",
+              "displayName": "OrderID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CustomerName",
+              "displayName": "CustomerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundAmount",
+              "displayName": "RefundAmount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundStatus",
+              "displayName": "RefundStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RefundDate",
+              "displayName": "RefundDate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReturnStatus",
+              "displayName": "ReturnStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReturnReason",
+              "displayName": "ReturnReason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Item",
+              "displayName": "Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Delivery",
+              "displayName": "Delivery",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ItemCondition",
+              "displayName": "ItemCondition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ReturnInitiate",
+              "displayName": "ReturnInitiate",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price",
+              "displayName": "Price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        928
+      ],
+      "id": "78325f22-bda1-4389-a456-ad2181aabd43",
+      "name": "Save Refund Request (Google Sheets)",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.OrderID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -80,
+        928
+      ],
+      "id": "3256a483-2b42-44e3-ba46-74cc41e1eb99",
+      "name": "Fetch Updated Refund Record",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get input data\nconst data = items[0].json;\n\n// Format dates nicely\nconst deliveryDate = data.Delivery;\nconst refundDate = data.RefundDate\n  ? new Date(data.RefundDate).toLocaleDateString()\n  : new Date().toLocaleDateString();\n\n// Refund amount fallback\nconst refundAmount = data.RefundAmount || data.Price;\n\n// Build user message\nconst message = `\u2705 Your refund has been successfully initiated.\n\nHere are the details:\n\u2022 Order ID: ${data.OrderID}\n\u2022 Item: ${data.Item}\n\u2022 Refund amount: ${refundAmount} PKR\n\u2022 Refund status: ${data.RefundStatus}\n\u2022 Return reason: ${data.ReturnReason}\n\u2022 Delivered on: ${deliveryDate}\n\u2022 Refund initiated on: ${refundDate}\n\nThe refunded amount will be credited to your original payment method within 5\u20137 business days. Thank you for your patience.`;\n\n// Return output\nreturn [\n  {\n    json: {\n      message,\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        928
+      ],
+      "id": "b8a6d03c-8e8d-4c60-8b37-6d6a3b5121a6",
+      "name": "Build Refund Confirmation Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": "=200"
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        928
+      ],
+      "id": "2387b9e6-5897-4da0-87a3-501d9c743ffa",
+      "name": "Send Refund Confirmation to User"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "documentId": {
+          "__rl": true,
+          "value": "1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg",
+          "mode": "list",
+          "cachedResultName": "Refund / Return",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QDRS2JTG6rLQ9TQgSYzGGqoiZlWrAlFDNjdc-VNJORg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "OrderID",
+              "lookupValue": "={{ $json.body.order_id }}"
+            },
+            {
+              "lookupColumn": "PhoneNo",
+              "lookupValue": "={{ $json.body.Phone_no }}"
+            },
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $json.body.email }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -528,
+        1136
+      ],
+      "id": "918f225c-09a7-4a49-82ad-c74c08cb4807",
+      "name": "Fetch Order for Refund Evaluation",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Handle order not found or empty response\nif (\n  !items ||\n  items.length === 0 ||\n  !items[0].json ||\n  Object.keys(items[0].json).length === 0\n) {\n  return [\n    {\n      json: {\n        success: false,\n        intent: \"check_refund_status\",\n        orderFound: false,\n        canRefund: false,\n        message: \"Sorry, I could not find any order with that number.\"\n      }\n    }\n  ];\n}\n\n// Extract order\nconst order = items[0].json;\n\n// Refund policy in days\nconst REFUND_POLICY_DAYS = 14;\n\n// Get today's date\nconst today = new Date();\n\n// Build order info object\nconst orderInfo = {\n  orderId: order.OrderID,\n  customerName: order.CustomerName,\n  item: order.Item,\n  price: order.Price,\n  deliveryDate: order.Delivery,\n  itemCondition: order.ItemCondition,\n  returnStatus: order.ReturnStatus\n};\n\n// Check delivery date\nif (!order.Delivery) {\n  return [\n    {\n      json: {\n        success: true,\n        intent: \"check_refund_status\",\n        orderFound: true,\n        canRefund: false,\n        orderInfo,\n        message: `Order ${orderInfo.orderId} for ${orderInfo.customerName} cannot be refunded because the delivery date is missing.`\n      }\n    }\n  ];\n}\n\n// Parse Delivery date (DD-MM-YY)\nconst [day, month, year] = order.Delivery.split(\"-\");\nconst deliveryDate = new Date(`20${year}`, month - 1, day);\n\n// Calculate difference in days\nconst diffTime = today - deliveryDate;\nconst diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));\n\n// Already refunded check\nif (order.RefundStatus && order.RefundStatus.toLowerCase() === \"completed\") {\n  return [\n    {\n      json: {\n        success: true,\n        intent: \"check_refund_status\",\n        orderFound: true,\n        canRefund: false,\n        orderInfo,\n        message: `Order ${orderInfo.orderId} for ${orderInfo.customerName} has already been refunded.`\n      }\n    }\n  ];\n}\n\n// Item condition check\nif (\n  order.ItemCondition &&\n  order.ItemCondition.toLowerCase() !== \"unopened\"\n) {\n  return [\n    {\n      json: {\n        success: true,\n        intent: \"check_refund_status\",\n        orderFound: true,\n        canRefund: false,\n        orderInfo,\n        message: `Order ${orderInfo.orderId} for ${orderInfo.customerName} is not eligible for a refund because the item was opened.`\n      }\n    }\n  ];\n}\n\n// Return status check\nif (\n  !order.ReturnStatus ||\n  order.ReturnStatus.toLowerCase() !== \"initiated\"\n) {\n  return [\n    {\n      json: {\n        success: true,\n        intent: \"check_refund_status\",\n        orderFound: true,\n        canRefund: false,\n        orderInfo,\n        message: `Order ${orderInfo.orderId} for ${orderInfo.customerName} cannot be refunded because the return has not been initiated yet.`\n      }\n    }\n  ];\n}\n\n// Refund window check\nconst canRefund = diffDays <= REFUND_POLICY_DAYS;\n\n// Final success response\nreturn [\n  {\n    json: {\n      success: true,\n      intent: \"check_refund_status\",\n      orderFound: true,\n      canRefund,\n      orderInfo,\n      refundAmount: order.Price,\n      daysSinceDelivery: diffDays,\n      message: canRefund\n        ? `Order ${orderInfo.orderId} for ${orderInfo.customerName} (${orderInfo.item}) is eligible for a refund of ${order.Price} PKR. Would you like me to process the refund now?`\n        : `Order ${orderInfo.orderId} for ${orderInfo.customerName} is not eligible for a refund because the refund period has expired.`\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        1136
+      ],
+      "id": "0a5dbe30-89e9-4118-8547-54a488fc729f",
+      "name": "Evaluate Refund Eligibility Policy"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c564201-1cc2-473f-bd7d-62ad1f37cc72",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        1136
+      ],
+      "id": "7586b933-b40f-4566-8e81-81077c846a6a",
+      "name": "Prepare Refund Status Message"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        144,
+        1136
+      ],
+      "id": "3e13ed23-16db-4035-a115-7605e4c89e42",
+      "name": "Send Refund Status Response"
+    },
+    {
+      "parameters": {
+        "content": "## Voice AI powered by Retell + n8n + Google Sheets.\n\n**Features:\n\u2714 Order Tracking\n\u2714 Cancellation Check\n\u2714 Order Cancellation\n\u2714 Return Processing\n\u2714 Refund Handling\n\nThis workflow converts voice intent into structured automation.**",
+        "height": 288,
+        "width": 416,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1552,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "25330fa6-d1e4-40ff-be8c-e06c8fe2e28f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Incoming Request & Intent Routing\n\n**\u2022 Webhook receives Retell voice request\n\u2022 Switch checks $json.body.intent\n\u2022 Routes to:\n  \u2192 Track Order\n  \u2192 Cancel Order\n  \u2192 Return Order\n  \u2192 Refund\nMain control logic of workflow**\n",
+        "height": 320,
+        "width": 256
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1584,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "7cbfd4bd-b533-4f39-85f1-5ceb8ab79a17",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Order Tracking\n\n**\u2022 Search order in Google Sheets\n\u2022 Validate Order ID\n\u2022 Format delivery date\n\u2022 Build tracking response\n\u2022 Send back to user**\n",
+        "height": 208,
+        "width": 208,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        224,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "2f430a24-ba82-4c9d-88e8-b24fd8ed6b09",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Check Cancel Eligibility\n\n**\u2022 Fetch order\n\u2022 Compare delivery date with today\n\u2022 Set canCancel = true/false\n\u2022 Send eligibility message\nRule: Only before/on delivery date**\n",
+        "height": 208,
+        "width": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        400,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "636e283c-dbe2-4ed9-8673-de2ee79a87f9",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Cancel Order\n\n**\u2022 Confirm user cancellation\n\u2022 Update status = cancelled\n\u2022 Save cancellation date\n\u2022 Fetch updated record\n\u2022 Send confirmation message**\n",
+        "height": 192,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        672,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "6397387d-270f-47d8-820e-01bfb14106ac",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "##  Check Return Eligibility\n\n**\u2022 Fetch order details\n\u2022 Check delivery date\n\u2022 Verify return window (e.g., 7 days)\n\u2022 Set canReturn = true/false\n\u2022 Send eligibility response**\n",
+        "height": 224,
+        "width": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        480,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "1a11af77-4321-486a-bbfc-19fbf1b35558",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Return Process\n**\u2022 Confirm return initiated\n\u2022 Save reason + item condition\n\u2022 Update return status\n\u2022 Fetch updated record\n\u2022 Send return confirmation**\n",
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        784,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "8072fae0-c42b-49b0-abbc-8a805fbdea91",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## Check Refund Eligibility \n\n**\u2022 Fetch order/return status\n\u2022 Check if return approved\n\u2022 Verify payment completed\n\u2022 Set canRefund = true/false\n\u2022 Send eligibility response**\n",
+        "height": 208,
+        "width": 272,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        352,
+        1104
+      ],
+      "typeVersion": 1,
+      "id": "26505a5f-5326-4b58-8fc9-cc2a20574a91",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## Refund Process\n**\u2022 Fetch refund details\n\u2022 Update refund status\n\u2022 Build refund message\n\u2022 Send response**\n",
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        512,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "1f59189b-89a5-48a7-adea-b5d708598441",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2c01739b-5498-4204-9ed1-0efe2ebff15e",
+              "leftValue": "={{ $json.body.intent }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1088,
+        416
+      ],
+      "id": "57c640bb-f275-4cdb-90b3-ca6285e8da8d",
+      "name": "Validate Intent Exists"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "call_ended",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "0a770476-12bf-41c1-ab4b-23741150fba7"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Call Ended"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6d4305b0-db08-49da-ac38-5373a1f0534b",
+                    "leftValue": "={{ $json.body.event }}",
+                    "rightValue": "call_analyzed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Call Analyzed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1264,
+        704
+      ],
+      "id": "50301385-61a8-4a27-8263-0e21dc2b047b",
+      "name": "Route by Call Event"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body;\nconst call = body.call || {};\nconst vars = call.collected_dynamic_variables || {};\n\nreturn [\n  {\n    json: {\n      timestamp: new Date().toISOString(),\n      call_id: call.call_id || \"\",\n      call_type: call.call_type || \"\",\n      agent_id: call.agent_id || \"\",\n      agent_name: call.agent_name || \"\",\n      agent_version: call.agent_version || \"\",\n      call_status: call.call_status || \"\",\n      start_timestamp: call.start_timestamp || \"\",\n      end_timestamp: call.end_timestamp || \"\",\n      duration_ms: call.duration_ms || \"\",\n      phone_no: vars.phone_no || \"\",\n      email: vars.email || \"\",\n      previous_node: vars.previous_node || \"\",\n      current_node: vars.current_node || \"\",\n      intent: vars.intent || \"\",\n      transcript: call.transcript || \"\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        688
+      ],
+      "id": "99aca8e3-3cb7-4662-a4a7-ee11066631e4",
+      "name": "Format Call Ended Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || {};\nconst call = body.call || {};\nconst vars = call.collected_dynamic_variables || {};\nconst toolCalls = call.transcript_with_tool_calls || [];\n\n// Defaults\nlet intent = \"\";\nlet order_id = \"\";\nlet call_successful = \"\";\n\n// Extract from tool calls\nfor (const item of toolCalls) {\n  if (item.role === \"tool_call_invocation\" && item.arguments) {\n    try {\n      const args = JSON.parse(item.arguments);\n      if (args.intent) intent = args.intent;\n      if (args.order_id) order_id = args.order_id;\n    } catch {}\n  }\n\n  if (item.role === \"tool_call_result\" && item.successful === true) {\n    call_successful = true;\n  }\n}\n\nreturn [\n  {\n    json: {\n      timestamp: new Date().toISOString(),\n      call_id: call.call_id || \"\",\n      agent_id: call.agent_id || \"\",\n      agent_name: call.agent_name || \"\",\n      call_duration_ms: call.duration_ms || 0,\n      call_status: call.call_status || \"\",\n      phone_no: vars.phone_no || \"\",\n      email: vars.email || \"\",\n      previous_node: vars.previous_node || \"\",\n      current_node: vars.current_node || \"\",\n\n      // Fields you asked for (now correctly populated)\n      intent,\n      order_id,\n      user_sentiment: \"\",          // not in payload\n      call_successful,\n      call_summary: \"\",             // not in payload\n      in_voicemail: false,          // not in payload\n      disconnection_reason: \"\",     // not in payload\n      recording_url: \"\",\n      recording_multi_channel_url: \"\",\n      public_log_url: \"\",\n      user_message: \"\",\n\n      notes: \"Call analysis completed\"\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1264,
+        928
+      ],
+      "id": "294250dc-b060-493e-913e-aa036a8527b0",
+      "name": "Extract Call Analysis Metrics"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1SChS9jIFAuNNWOVeWRAd8eMJwsU8GWjdC29FFNJv1G4",
+          "mode": "list",
+          "cachedResultName": "call_ended_logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SChS9jIFAuNNWOVeWRAd8eMJwsU8GWjdC29FFNJv1G4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SChS9jIFAuNNWOVeWRAd8eMJwsU8GWjdC29FFNJv1G4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_type",
+              "displayName": "call_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_id",
+              "displayName": "agent_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_version",
+              "displayName": "agent_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_status",
+              "displayName": "call_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "start_timestamp",
+              "displayName": "start_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "end_timestamp",
+              "displayName": "end_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone_no",
+              "displayName": "phone_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "previous_node",
+              "displayName": "previous_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_node",
+              "displayName": "current_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1072,
+        864
+      ],
+      "id": "017c14d4-0a8c-4d43-9a92-040048b74d84",
+      "name": "Save Call Ended Log",
+      "credentials": "REMOVED_FOR_SECURITY"
+    },
+    {
+      "parameters": {
+        "authentication": "REMOVED_FOR_SECURITY",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1INnQPBvoBuHf6r6ZTRf6QDBmRgKlpE3K5QgZy3q6RGo",
+          "mode": "list",
+          "cachedResultName": "call_analyzed_metrics",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1INnQPBvoBuHf6r6ZTRf6QDBmRgKlpE3K5QgZy3q6RGo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1INnQPBvoBuHf6r6ZTRf6QDBmRgKlpE3K5QgZy3q6RGo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_id",
+              "displayName": "call_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_type",
+              "displayName": "call_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_id",
+              "displayName": "agent_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_name",
+              "displayName": "agent_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "agent_version",
+              "displayName": "agent_version",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_status",
+              "displayName": "call_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "start_timestamp",
+              "displayName": "start_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "end_timestamp",
+              "displayName": "end_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone_no",
+              "displayName": "phone_no",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "previous_node",
+              "displayName": "previous_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "current_node",
+              "displayName": "current_node",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "intent",
+              "displayName": "intent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "user_sentiment",
+              "displayName": "user_sentiment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "call_successful",
+              "displayName": "call_successful",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "intent_confidence",
+              "displayName": "intent_confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_summary",
+              "displayName": "call_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "call_duration_ms",
+              "displayName": "call_duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "in_voicemail",
+              "displayName": "in_voicemail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "disconnection_reason",
+              "displayName": "disconnection_reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recording_url",
+              "displayName": "recording_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recording_multi_channel_url",
+              "displayName": "recording_multi_channel_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "public_log_url",
+              "displayName": "public_log_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_message",
+              "displayName": "user_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1264,
+        1104
+      ],
+      "id": "3be535ec-8b6a-4c17-81ab-86eb3bfc3baf",
+      "name": "Save Call Analysis Metrics",
+      "credentials": "REMOVED_FOR_SECURITY"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Build Order Tracking Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare Message for Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Message for Response": {
+      "main": [
+        [
+          {
+            "node": "Send Order Tracking Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order Records": {
+      "main": [
+        [
+          {
+            "node": "Build Order Tracking Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Incoming Voice Agent Request (Retell Webhook)": {
+      "main": [
+        [
+          {
+            "node": "Validate Intent Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by User Intent": {
+      "main": [
+        [
+          {
+            "node": "Fetch Order Records",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cancellation Initiated?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Return Initiated by User?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Refund Initiated by User?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancellation Initiated?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Cancellation Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Order for Cancellation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cancellation Details": {
+      "main": [
+        [
+          {
+            "node": "Update Order as Cancelled (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Order as Cancelled (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Cancelled Order Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Cancelled Order Record": {
+      "main": [
+        [
+          {
+            "node": "Build Cancellation Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Cancellation Confirmation Message": {
+      "main": [
+        [
+          {
+            "node": "Send Cancellation Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order for Cancellation Check": {
+      "main": [
+        [
+          {
+            "node": "Check Cancellation Eligibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cancellation Eligibility": {
+      "main": [
+        [
+          {
+            "node": "Prepare Cancellation Status Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cancellation Status Message": {
+      "main": [
+        [
+          {
+            "node": "Send Cancellation Eligibility Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Return Initiated by User?": {
+      "main": [
+        [
+          {
+            "node": "Capture Return Request Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Order for Return Eligibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Return Request Details": {
+      "main": [
+        [
+          {
+            "node": "Save Return Request (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Return Request (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Updated Return Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Updated Return Record": {
+      "main": [
+        [
+          {
+            "node": "Build Return Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Return Confirmation Message": {
+      "main": [
+        [
+          {
+            "node": "Send Return Confirmation to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order for Return Eligibility": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Return Eligibility Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Return Eligibility Policy": {
+      "main": [
+        [
+          {
+            "node": "Prepare Return Eligibility Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Return Eligibility Message": {
+      "main": [
+        [
+          {
+            "node": "Send Return Eligibility Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Refund Initiated by User?": {
+      "main": [
+        [
+          {
+            "node": "Capture Refund Request Details",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Order for Refund Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Refund Request Details": {
+      "main": [
+        [
+          {
+            "node": "Save Refund Request (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Refund Request (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Fetch Updated Refund Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Updated Refund Record": {
+      "main": [
+        [
+          {
+            "node": "Build Refund Confirmation Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Refund Confirmation Message": {
+      "main": [
+        [
+          {
+            "node": "Send Refund Confirmation to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Order for Refund Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Refund Eligibility Policy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Refund Eligibility Policy": {
+      "main": [
+        [
+          {
+            "node": "Prepare Refund Status Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Refund Status Message": {
+      "main": [
+        [
+          {
+            "node": "Send Refund Status Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Intent Exists": {
+      "main": [
+        [
+          {
+            "node": "Route by User Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Call Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Call Event": {
+      "main": [
+        [
+          {
+            "node": "Format Call Ended Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Call Analysis Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Call Ended Data": {
+      "main": [
+        [
+          {
+            "node": "Save Call Ended Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Call Analysis Metrics": {
+      "main": [
+        [
+          {
+            "node": "Save Call Analysis Metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ea7c8021-a242-4c96-b9a0-26e8d6c021cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98bfc71c34a2f4b79989fc8778a831f45a76350cc11a099e0f030ce32b105241"
+  },
+  "id": "spiJ1zvJqnmieyphezhGF",
+  "tags": []
+}
