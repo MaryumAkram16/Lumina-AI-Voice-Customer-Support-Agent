@@ -7,6 +7,7 @@ An advanced, automated voice-based customer support system designed for e-commer
 - [Problem Statement](#problem-statement)
 - [Solution](#solution)
 - [Key Features](#key-features)
+- [Workflow Screenshot](#workflow-screenshot)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
 - [API Reference](#api-reference)
@@ -19,6 +20,9 @@ An advanced, automated voice-based customer support system designed for e-commer
 
 ## Introduction
 Lumina is an AI voice customer support agent that helps businesses streamline their customer service process using advanced voice recognition and response technology. It's specifically designed for e-commerce platforms to handle routine customer inquiries automatically, 24/7, with human-like conversational abilities.
+
+## Live Demo
+
 
 ## Problem Statement
 Traditional e-commerce customer support often suffers from:
@@ -46,8 +50,15 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 - **Conversational Intent Routing**: Sophisticated routing logic to handle various customer needs within a single call.
 
 ## Workflow Screenshot
-
+**Lumina N8N workflow**
 ![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina.PNG?raw=true)
+
+**Lumina Retell workflows**
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina%20retell.PNG?raw=true)
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina%20retel%20tracking.PNG?raw=true)
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina%20retel%20cancel.PNG?raw=true)
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina%20retell%20return.PNG?raw=true)
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina%20retel%20refund..PNG?raw=true)
 
 
 ## Tech Stack
@@ -60,6 +71,7 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 - **Communication**: Webhooks for real-time data exchange
 
 ## System Architecture
+![System Architecture](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/architecture.png?raw=true)
 
 The system follows a modular event-driven architecture:
 
