@@ -47,8 +47,7 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 
 ## Workflow Screenshot
 
-![Workflow Screenshot](<img width="1323" height="761" alt="lumina" src="https://github.com/user-attachments/assets/7040af1f-64e4-4786-b102-8d1564fd0c3c" />
-)
+![Workflow Screenshot](https://raw.githubusercontent.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent/main/lumina.PNG?raw=true)
 
 
 ## Tech Stack
