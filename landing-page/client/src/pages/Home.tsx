@@ -26,15 +26,18 @@ import {
 } from "lucide-react";
 
 const asset = {
-  logo: "/manus-storage/lumina-beacon-logo_334550ce.png",
-  hero: "/manus-storage/lumina-harbor-signal-hero_f2c043c2.jpg",
-  routePaper: "/manus-storage/lumina-route-paper_c07fe10f.jpg",
-  dusk: "/manus-storage/lumina-beacon-dusk_abab46e5.jpg",
-  workflow: "/manus-storage/lumina-workflow_39ca12d6.png",
-  retell: "/manus-storage/lumina-retell_a8353c41.png",
-  tracking: "/manus-storage/lumina-tracking_861c071b.png",
-  cancel: "/manus-storage/lumina-cancel_156dc0f8.png",
+  logo: `${import.meta.env.BASE_URL}assets/lumina-beacon-logo.png`,
+  hero: `${import.meta.env.BASE_URL}assets/lumina-harbor-signal-hero.webp`,
+  routePaper: `${import.meta.env.BASE_URL}assets/lumina-route-paper.webp`,
+  dusk: `${import.meta.env.BASE_URL}assets/lumina-beacon-dusk.webp`,
+  workflow: `${import.meta.env.BASE_URL}assets/lumina-workflow.webp`,
+  retell: `${import.meta.env.BASE_URL}assets/lumina-retell.webp`,
+  tracking: `${import.meta.env.BASE_URL}assets/lumina-tracking.webp`,
+  cancel: `${import.meta.env.BASE_URL}assets/lumina-cancel.webp`,
 };
+
+const heroBackground = `linear-gradient(90deg, rgba(3, 28, 35, 0.95) 0%, rgba(3, 28, 35, 0.76) 45%, rgba(3, 28, 35, 0.3) 100%), url("${import.meta.env.BASE_URL}assets/lumina-harbor-signal-hero.webp")`;
+const footerBackground = `linear-gradient(90deg, rgba(3, 28, 35, 0.94) 0%, rgba(3, 28, 35, 0.73) 58%, rgba(3, 28, 35, 0.32) 100%), url("${import.meta.env.BASE_URL}assets/lumina-beacon-dusk.webp")`;
 
 const scenarios = [
   {
@@ -198,7 +201,7 @@ export default function Home() {
 
       <main id="top">
         <section className="hero-section">
-          <div className="hero-image" aria-hidden="true" />
+          <div className="hero-image" style={{ backgroundImage: heroBackground }} aria-hidden="true" />
           <div className="hero-grid-overlay" aria-hidden="true" />
           <div className="hero-inner page-width">
             <div className="hero-copy reveal-up">
@@ -367,7 +370,7 @@ export default function Home() {
         </section>
 
         <section className="footer-cta-section" id="footer-cta">
-          <div className="footer-cta-image" aria-hidden="true" /><div className="footer-cta-overlay" aria-hidden="true" /><div className="page-width footer-cta-inner"><div className="eyebrow light-eyebrow"><span className="eyebrow-dot" /> READY FOR A PRIVATE TEST CALL?</div><h2>Keep the signal.<br /><em>Lose the guesswork.</em></h2><p>Inspect the demo, read the route, then decide how much help you want bringing Lumina into your stack.</p><div className="hero-actions"><button className="button button-primary" type="button" onClick={() => scrollToId("demo")}>Run the safe demo <ArrowDownRight size={17} /></button><button className="text-button light-text-button" type="button" onClick={() => scrollToId("route")}>Read the setup path <ChevronRight size={16} /></button></div></div>
+          <div className="footer-cta-image" style={{ backgroundImage: footerBackground }} aria-hidden="true" /><div className="footer-cta-overlay" aria-hidden="true" /><div className="page-width footer-cta-inner"><div className="eyebrow light-eyebrow"><span className="eyebrow-dot" /> READY FOR A PRIVATE TEST CALL?</div><h2>Keep the signal.<br /><em>Lose the guesswork.</em></h2><p>Inspect the demo, read the route, then decide how much help you want bringing Lumina into your stack.</p><div className="hero-actions"><button className="button button-primary" type="button" onClick={() => scrollToId("demo")}>Run the safe demo <ArrowDownRight size={17} /></button><button className="text-button light-text-button" type="button" onClick={() => scrollToId("route")}>Read the setup path <ChevronRight size={16} /></button></div></div>
         </section>
       </main>
 

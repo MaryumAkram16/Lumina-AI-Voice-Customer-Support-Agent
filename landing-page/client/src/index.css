@@ -80,7 +80,7 @@ h3 { letter-spacing: -0.035em; }
 /* Hero */
 .hero-section { position: relative; min-height: 785px; background: var(--navy); color: var(--white); }
 .hero-image, .footer-cta-image, .hero-grid-overlay, .footer-cta-overlay { position: absolute; inset: 0; pointer-events: none; }
-.hero-image { background: linear-gradient(90deg, rgba(3, 28, 35, 0.95) 0%, rgba(3, 28, 35, 0.76) 45%, rgba(3, 28, 35, 0.3) 100%), url("/assets/lumina-harbor-signal-hero.webp") center/cover; }
+.hero-image { background: linear-gradient(90deg, rgba(3, 28, 35, 0.95) 0%, rgba(3, 28, 35, 0.76) 45%, rgba(3, 28, 35, 0.3) 100%) center/cover; }
 .hero-grid-overlay { opacity: 0.35; background-image: linear-gradient(rgba(140, 200, 185, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(140, 200, 185, 0.08) 1px, transparent 1px); background-size: 78px 78px; mask-image: linear-gradient(90deg, black, transparent 75%); }
 .hero-inner { position: relative; z-index: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 0.8fr); align-items: center; gap: 80px; min-height: 700px; padding-top: 95px; }
 .hero-copy { padding: 70px 0 40px; }
@@ -311,7 +311,7 @@ h3 { letter-spacing: -0.035em; }
 
 /* Closing CTA and footer */
 .footer-cta-section { position: relative; min-height: 560px; background: var(--navy-deep); color: var(--white); }
-.footer-cta-image { background: linear-gradient(90deg, rgba(3, 28, 35, 0.94) 0%, rgba(3, 28, 35, 0.73) 58%, rgba(3, 28, 35, 0.32) 100%), url("/assets/lumina-beacon-dusk.webp") center/cover; }
+.footer-cta-image { background: linear-gradient(90deg, rgba(3, 28, 35, 0.94) 0%, rgba(3, 28, 35, 0.73) 58%, rgba(3, 28, 35, 0.32) 100%) center/cover; }
 .footer-cta-overlay { background: linear-gradient(180deg, rgba(3, 28, 35, 0.22), rgba(3, 28, 35, 0.52)); }
 .footer-cta-inner { position: relative; z-index: 1; padding: 130px 0 120px; }
 .footer-cta-inner h2 { margin-top: 26px; color: var(--white); }
