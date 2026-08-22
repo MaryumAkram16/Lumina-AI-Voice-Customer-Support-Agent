@@ -130,13 +130,15 @@ The n8n workflow expects a POST request with the following JSON structure from R
 
 ## Security & Compliance
 
-- **Data Encryption**: All data in transit is encrypted via HTTPS/TLS.
-- **Access Control**: Google Sheets access is restricted via Service Account credentials.
-- **Privacy**: No audio recordings are stored in the n8n environment; only structured metadata is processed.
-- **GDPR Compliant**: Customer data is handled according to GDPR standards.
-- **PCI Compliance**: No payment card data is processed or stored in this system.
+- **Transport Security**: Use HTTPS/TLS for traffic between connected services; the buyer is responsible for provider and deployment configuration.
+- **Access Control**: Google Sheets access should be restricted through the buyer’s service-account and credential settings.
+- **Privacy**: The reference workflow is designed around structured metadata, but the buyer must verify actual audio, transcript, retention, and provider settings.
+- **Compliance Boundary**: This template is not certified as GDPR, PCI, HIPAA, or otherwise compliant. The buyer is responsible for consent, retention, access control, regional processing, and legal review.
+- **Sensitive Data**: Do not process payment-card data or other sensitive information unless the buyer has separately designed and validated the required controls.
 
 ## Setup Guide
+
+For the complete zero-to-test-call path, see [`SETUP.md`](SETUP.md). For production health checks, duplicate-event protection, and failure handling, see [`OPERATIONS.md`](OPERATIONS.md). For commercial scope, third-party dependencies, privacy responsibilities, licensing, and support boundaries, see [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
 
 ### Prerequisites
 
@@ -262,6 +264,10 @@ Keep `.env` and all credential files private. The repository ignores local envir
      });
    });
    ```
+
+## Operational Readiness
+
+Before connecting real customer traffic, complete the synthetic setup in [`SETUP.md`](SETUP.md), pass the health-check and duplicate-event checks in [`OPERATIONS.md`](OPERATIONS.md), and review the buyer responsibilities in [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
 
 ## Troubleshooting
 
