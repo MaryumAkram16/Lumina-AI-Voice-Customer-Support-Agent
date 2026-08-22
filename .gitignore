@@ -5,3 +5,5 @@
 *.key
 service-account*.json
 credentials*.json
+__pycache__/
+*.py[cod]
