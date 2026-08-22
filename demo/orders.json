@@ -1,0 +1,38 @@
+[
+  {
+    "order_id": "ORD-TEST-001",
+    "customer_name": "Alex Example",
+    "email": "alex@example.test",
+    "phone_no": "+1-555-0101",
+    "status": "shipped",
+    "carrier": "UPS",
+    "tracking_number": "1ZTEST00000000001",
+    "delivery_date": "2026-12-31",
+    "delivery_location": "Test City",
+    "tracking_steps": ["Label created", "In transit"]
+  },
+  {
+    "order_id": "ORD-TEST-002",
+    "customer_name": "Sam Example",
+    "email": "sam@example.test",
+    "phone_no": "+1-555-0102",
+    "status": "processing",
+    "carrier": null,
+    "tracking_number": null,
+    "delivery_date": null,
+    "delivery_location": "Test City",
+    "tracking_steps": ["Order received"]
+  },
+  {
+    "order_id": "ORD-TEST-003",
+    "customer_name": "Taylor Example",
+    "email": "taylor@example.test",
+    "phone_no": "+1-555-0103",
+    "status": "delivered",
+    "carrier": "USPS",
+    "tracking_number": "9400TEST0000000003",
+    "delivery_date": "2026-08-20",
+    "delivery_location": "Test City",
+    "tracking_steps": ["Label created", "In transit", "Delivered"]
+  }
+]

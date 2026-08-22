@@ -265,9 +265,21 @@ Keep `.env` and all credential files private. The repository ignores local envir
    });
    ```
 
+## Provider-Free Demo
+
+Lumina includes a local demo harness in [`demo/`](demo/) that uses synthetic orders only. It makes no Retell, n8n, Google, or model-provider calls and never mutates an order, so buyers can inspect deterministic success, validation, not-found, identity-verification, duplicate-event, and safe state-changing responses before configuring providers.
+
+```bash
+python3 demo/lumina_demo.py --list
+python3 demo/lumina_demo.py --scenario track_known_order
+python3 -m unittest discover -s demo -p 'test_*.py' -v
+```
+
+The demo is intentionally separate from the production workflow exports. See [`demo/README.md`](demo/README.md) for scenarios and the response contract.
+
 ## Operational Readiness
 
-Before connecting real customer traffic, complete the synthetic setup in [`SETUP.md`](SETUP.md), pass the health-check and duplicate-event checks in [`OPERATIONS.md`](OPERATIONS.md), and review the buyer responsibilities in [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
+Before connecting real customer traffic, complete the synthetic setup in [`SETUP.md`](SETUP.md), run the provider-free checks in [`demo/README.md`](demo/README.md), pass the health-check and duplicate-event checks in [`OPERATIONS.md`](OPERATIONS.md), and review the buyer responsibilities in [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
 
 ## Troubleshooting
 

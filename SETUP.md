@@ -8,6 +8,8 @@ This guide takes a new operator from an empty provider workspace to a controlled
 
 Lumina uses Retell for the voice interaction, n8n for orchestration and business logic, Google Sheets as the reference order data source, and a model provider for post-call analysis. The repository contains the workflow export and Retell agent configuration; it does not contain provider credentials.
 
+Before creating provider accounts, run the provider-free demo in [`demo/README.md`](demo/README.md). It uses synthetic orders, makes no network calls, and confirms the safe response contract locally.
+
 | Component | Operator action | Test success condition |
 |---|---|---|
 | Retell AI | Create or import the voice agent and configure the custom LLM/tools | A test call can reach the configured endpoint |

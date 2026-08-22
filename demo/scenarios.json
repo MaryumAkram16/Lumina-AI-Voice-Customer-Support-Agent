@@ -1,0 +1,53 @@
+{
+  "track_known_order": {
+    "description": "Track a known synthetic shipped order.",
+    "request": {
+      "event_id": "demo-track-001",
+      "order_id": "ORD-TEST-001",
+      "intent": "track_order",
+      "email": "alex@example.test"
+    }
+  },
+  "cancel_processing_order": {
+    "description": "Show an eligible cancellation without performing a real action.",
+    "request": {
+      "event_id": "demo-cancel-001",
+      "order_id": "ORD-TEST-002",
+      "intent": "cancel_order",
+      "email": "sam@example.test"
+    }
+  },
+  "return_delivered_order": {
+    "description": "Show an eligible return review without creating a return.",
+    "request": {
+      "event_id": "demo-return-001",
+      "order_id": "ORD-TEST-003",
+      "intent": "return_item",
+      "email": "taylor@example.test"
+    }
+  },
+  "unknown_order": {
+    "description": "Safely handle an order that is not in the synthetic fixture.",
+    "request": {
+      "event_id": "demo-not-found-001",
+      "order_id": "ORD-TEST-999",
+      "intent": "track_order"
+    }
+  },
+  "missing_order_id": {
+    "description": "Reject an incomplete request without querying data.",
+    "request": {
+      "event_id": "demo-validation-001",
+      "intent": "track_order"
+    }
+  },
+  "identity_mismatch": {
+    "description": "Avoid disclosing order data when supplied contact details do not match.",
+    "request": {
+      "event_id": "demo-verification-001",
+      "order_id": "ORD-TEST-001",
+      "intent": "track_order",
+      "email": "wrong@example.test"
+    }
+  }
+}
