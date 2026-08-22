@@ -65,7 +65,6 @@ class DemoEngine:
                     request,
                     outcome="not_found",
                     intent=intent,
-                    order_id=order_id,
                     message="The demo could not find that order. No status or action was invented.",
                 )
             elif not self._identity_matches(request, order):
@@ -73,7 +72,6 @@ class DemoEngine:
                     request,
                     outcome="verification_failed",
                     intent=intent,
-                    order_id=order_id,
                     message="The demo could not verify the supplied customer details. No order data was disclosed.",
                 )
             else:

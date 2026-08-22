@@ -7,3 +7,7 @@ service-account*.json
 credentials*.json
 __pycache__/
 *.py[cod]
+landing-page/node_modules/
+landing-page/dist/
+landing-page/.manus-logs/
+landing-page/.vite/

@@ -103,7 +103,7 @@ Before each release, confirm that:
 - Provider failures do not cause fabricated customer responses.
 - Logs do not contain secrets or unnecessary personal data.
 - The workflow version and rollback export are archived.
-- The privacy and commercial disclosures in `COMMERCIAL_SCOPE.md` have been reviewed.
+- The privacy and third-party dependency boundaries in `README.md` have been reviewed.
 
 ## 6. Rollback procedure
 

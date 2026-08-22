@@ -10,6 +10,7 @@ An advanced, automated voice-based customer support system designed for e-commer
 - [Workflow Screenshot](#workflow-screenshot)
 - [Tech Stack](#tech-stack)
 - [System Architecture](#system-architecture)
+- [Product Landing Page](#product-landing-page)
 - [API Reference](#api-reference)
 - [Security & Compliance](#security--compliance)
 - [Setup Guide](#setup-guide)
@@ -95,6 +96,10 @@ The system follows a modular event-driven architecture:
 5. Response generated → Retell AI converts to natural speech
 6. Post-call analytics logged → Gemini AI analyzes sentiment/metrics
 
+## Product Landing Page
+
+The commercial product landing page is maintained in [`landing-page/`](landing-page/). It presents the Harbor Console product story, provider-free demo, workflow proof, package comparison, and buyer responsibility boundaries. See [`landing-page/README.md`](landing-page/README.md) for local development and static-build instructions.
+
 ## API Reference (n8n Webhook)
 
 The n8n workflow expects a POST request with the following JSON structure from Retell:
@@ -138,7 +143,7 @@ The n8n workflow expects a POST request with the following JSON structure from R
 
 ## Setup Guide
 
-For the complete zero-to-test-call path, see [`SETUP.md`](SETUP.md). For production health checks, duplicate-event protection, and failure handling, see [`OPERATIONS.md`](OPERATIONS.md). For commercial scope, third-party dependencies, privacy responsibilities, licensing, and support boundaries, see [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
+For the complete zero-to-test-call path, see [`SETUP.md`](SETUP.md). For production health checks, duplicate-event protection, and failure handling, see [`OPERATIONS.md`](OPERATIONS.md). Commercial implementation, private adapter work, and setup support are available separately by request.
 
 ### Prerequisites
 
@@ -279,7 +284,7 @@ The demo is intentionally separate from the production workflow exports. See [`d
 
 ## Operational Readiness
 
-Before connecting real customer traffic, complete the synthetic setup in [`SETUP.md`](SETUP.md), run the provider-free checks in [`demo/README.md`](demo/README.md), pass the health-check and duplicate-event checks in [`OPERATIONS.md`](OPERATIONS.md), and review the buyer responsibilities in [`COMMERCIAL_SCOPE.md`](COMMERCIAL_SCOPE.md).
+Before connecting real customer traffic, complete the synthetic setup in [`SETUP.md`](SETUP.md), run the provider-free checks in [`demo/README.md`](demo/README.md), and pass the health-check and duplicate-event checks in [`OPERATIONS.md`](OPERATIONS.md). Private implementation support can add buyer-specific configuration and adapter verification.
 
 ## Troubleshooting
 
@@ -329,3 +334,9 @@ Thank you for helping us improve Lumina!
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Product Editions
+
+Lumina is maintained as a public **Community Reference** and a separate private **Pro Implementation Kit**. This repository contains the Community Reference: the core Retell AI and n8n implementation, synthetic demo, and general setup and operations guidance. The private Pro Kit adds deployment-readiness tooling, buyer-specific adapters, expanded verification, and defined implementation support. Its contents are delivered privately by request and are not included in this public repository.
+
+The public repository remains inspectable and adaptable under its existing license. The Pro Kit does not claim exclusivity over already-published public files; its value is the additional deployment, verification, operations, and support work.

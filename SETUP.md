@@ -149,4 +149,4 @@ To disconnect the test deployment, deactivate the n8n workflow, remove the Retel
 
 ## 11. Production readiness gate
 
-Do not move beyond a private test until the operator has confirmed the checks in `OPERATIONS.md`, reviewed the disclosures in `COMMERCIAL_SCOPE.md`, configured consent and retention policies, and tested provider failure and unknown-order behavior. A successful demo call alone is not evidence that the system is production-ready.
+Do not move beyond a private test until the operator has confirmed the checks in `OPERATIONS.md`, reviewed the privacy and third-party dependency boundaries in `README.md`, configured consent and retention policies, and tested provider failure and unknown-order behavior. A successful demo call alone is not evidence that the system is production-ready.
