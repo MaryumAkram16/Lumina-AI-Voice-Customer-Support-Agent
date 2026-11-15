@@ -4,11 +4,13 @@ An advanced, automated voice-based customer support system designed for e-commer
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [Live Demo](#live-demo)
 - [Problem Statement](#problem-statement)
 - [Solution](#solution)
 - [Key Features](#key-features)
 - [Workflow Screenshot](#workflow-screenshot)
 - [Tech Stack](#tech-stack)
+- [Two Backends](#two-backends)
 - [System Architecture](#system-architecture)
 - [Product Landing Page](#product-landing-page)
 - [API Reference](#api-reference)
@@ -26,6 +28,26 @@ Lumina is an AI voice customer support agent that helps businesses streamline th
 This demo shows the *Lumina AI Voice Customer Support Agent* handling a live e-commerce support call, including intent detection, workflow execution, and real-time voice interaction.
 
 [![Watch Demo](https://img.youtube.com/vi/P8TuDYV7eaY/0.jpg)](https://youtu.be/P8TuDYV7eaY)
+
+### Try it yourself
+
+> Placeholders: fill these in after deploying [`serverless/`](serverless/).
+
+- **Hosted backend:** `https://YOUR-PROJECT.vercel.app` (health check: `https://YOUR-PROJECT.vercel.app/api/health`)
+- **Retell test call:** `ADD-RETELL-WEB-CALL-OR-PHONE-LINK`
+
+The hosted demo uses synthetic orders only. Phrases to try:
+
+| Say | What happens |
+|-----|--------------|
+| "Where is my order? The order number is ORD-TEST-001." | Reports the order as shipped with UPS, expected 31 December 2026. |
+| "I want to cancel order ORD-TEST-004. My email is jordan@example.test." | Confirms it can be cancelled, then cancels it. Ask again and it tells you it is already cancelled. |
+| "I'd like to return order ORD-TEST-005, email casey@example.test. It's unopened, wrong colour." | Confirms the return is within 14 days and starts it. |
+| "Can I get a refund for order ORD-TEST-006? My email is riley@example.test." | Confirms the refund amount and starts the refund. |
+| "Refund order ORD-TEST-008, email avery@example.test." | Declines: the item was opened. |
+| "Track order ORD-TEST-999." | Says it cannot find that order, without inventing a status. |
+
+The full list of demo orders is in [`serverless/README.md`](serverless/README.md#demo-orders).
 
 ## Problem Statement
 Traditional e-commerce customer support often suffers from:
@@ -76,6 +98,24 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 - **AI Models**: Gemini 2.5 Flash (for call analysis and intent extraction)
 - **Logic**: JavaScript (Node.js) within n8n Code nodes
 - **Communication**: Webhooks for real-time data exchange
+- **Serverless Backend (optional)**: Vercel Functions, Node.js and TypeScript, zod validation, vitest (see [`serverless/`](serverless/))
+
+## Two Backends
+
+Retell's custom functions can call either backend. Both apply the same business rules and return the same response fields, so the Retell agent prompts are identical for both. You choose by pasting a different URL into each Retell function.
+
+| | n8n workflow (no-code) | Serverless backend |
+|---|---|---|
+| Location | `Lumina_AI_Voice_Customer_Support_Agent..json` | [`serverless/`](serverless/) |
+| Hosting | n8n Cloud or self-hosted | Vercel |
+| Change the rules | Edit Code nodes visually | Edit `serverless/lib/rules.ts`, covered by tests |
+| Request authentication | Not included | Retell signature verified on every request |
+| Customer verification | Order ID | Order ID plus matching email or phone for cancel, return and refund |
+| Data | Google Sheets | Synthetic demo orders by default, or Google Sheets |
+| Post-call logging and analysis | Yes | No (keep the agent webhook on n8n for this) |
+| Best for | Editing the flow without code | A public demo URL and a tested, hardened API |
+
+Setup, deployment and the function-to-URL table are in [`serverless/README.md`](serverless/README.md). The threat model is in [`SECURITY.md`](SECURITY.md).
 
 ## System Architecture
 
@@ -87,6 +127,8 @@ The system follows a modular event-driven architecture:
 2. **Logic Layer**: n8n acts as the brain, receiving structured data from Retell, performing database lookups, and executing business logic.
 3. **Data Layer**: Google Sheets serves as a flexible, real-time database for order and customer information.
 4. **Intelligence Layer**: Gemini AI performs post-call analysis to extract sentiment and key metrics.
+
+The Logic Layer can be swapped: the serverless backend in [`serverless/`](serverless/) answers the same Retell function calls as n8n, with the business rules in one tested TypeScript module and the data source behind an interface (synthetic demo orders or Google Sheets). See [Two Backends](#two-backends).
 
 ### Data Flow:
 1. Customer initiates voice call → Retell AI processes audio input
@@ -122,6 +164,8 @@ The n8n workflow expects a POST request with the following JSON structure from R
 | `phone_no` | string | Customer phone number. |
 | `customer_name` | string | Customer's full name for personalization. |
 
+The serverless backend accepts the same request and returns these same fields; its full request and response reference is in [`serverless/README.md`](serverless/README.md#endpoints).
+
 ### Response Example:
 ```json
 {
@@ -140,6 +184,8 @@ The n8n workflow expects a POST request with the following JSON structure from R
 - **Privacy**: The reference workflow is designed around structured metadata, but the buyer must verify actual audio, transcript, retention, and provider settings.
 - **Compliance Boundary**: This template is not certified as GDPR, PCI, HIPAA, or otherwise compliant. The buyer is responsible for consent, retention, access control, regional processing, and legal review.
 - **Sensitive Data**: Do not process payment-card data or other sensitive information unless the buyer has separately designed and validated the required controls.
+
+For the serverless backend's threat model, protections and security tests, see [`SECURITY.md`](SECURITY.md).
 
 ## Setup Guide
 
