@@ -142,6 +142,13 @@ export function expectSpeakable(message: unknown): void {
   if (/\p{Extended_Pictographic}/u.test(message)) throw new Error(`emoji in message: ${message}`);
   if (/https?:\/\//i.test(message)) throw new Error(`URL in message: ${message}`);
   // No order IDs or tracking numbers, which a voice would read digit by digit.
-  if (/ORD-|\b[A-Z0-9]*\d{5,}[A-Z0-9]*\b/.test(message))
+  if (/ORD-|\b(?=[A-Z0-9]*[A-Z])[A-Z0-9]*\d{5,}[A-Z0-9]*\b|\d{7,}/.test(message)) {
     throw new Error(`ID in message: ${message}`);
+  }
+}
+
+/** URL of a `fetch` call as text, whatever form the first argument took. */
+export function urlOf(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  return input instanceof URL ? input.href : input.url;
 }
