@@ -18,7 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
-  "include": ["api", "lib", "tests", "scripts", "*.ts"]
+  "include": ["api", "lib", "tests", "scripts", "web", "*.ts"]
 }

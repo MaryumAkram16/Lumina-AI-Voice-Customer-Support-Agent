@@ -3,41 +3,106 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex" />
-    <title>Lumina serverless backend</title>
-    <style>
-      body {
-        font:
-          16px/1.6 system-ui,
-          sans-serif;
-        max-width: 40rem;
-        margin: 4rem auto;
-        padding: 0 1rem;
-        color: #1c2733;
-      }
-      code {
-        background: #eef1f4;
-        padding: 0.1rem 0.3rem;
-        border-radius: 4px;
-      }
-      li {
-        margin: 0.25rem 0;
-      }
-    </style>
+    <meta
+      name="description"
+      content="Talk to Lumina, an AI voice agent for e-commerce support. Track, cancel, return or refund a demo order by voice."
+    />
+    <meta name="theme-color" content="#062a32" />
+    <title>Lumina · Live voice demo</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-BL961CkA.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DFh0B66n.css">
   </head>
   <body>
-    <h1>Lumina serverless backend</h1>
-    <p>
-      Webhook backend for the Lumina voice agent. Order endpoints accept signed
-      <code>POST</code> requests from Retell only.
-    </p>
-    <ul>
-      <li><code>GET /api/health</code></li>
-      <li><code>POST /api/track-order</code></li>
-      <li><code>POST /api/cancel-order</code></li>
-      <li><code>POST /api/return-item</code></li>
-      <li><code>POST /api/refund-eligibility</code></li>
-      <li><code>POST /api/order</code></li>
-    </ul>
+    <div class="top">
+      <header class="bar page">
+        <a class="brand" href="/" aria-label="Lumina home">
+          <svg viewBox="0 0 64 64" width="30" height="30" aria-hidden="true">
+            <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round">
+              <path d="M12 42a22 22 0 0 1 40 0" />
+              <path d="M21 45a12 12 0 0 1 22 0" opacity=".6" />
+            </g>
+            <path d="M10 54 54 10" stroke="#f36b3b" stroke-width="4" stroke-linecap="round" />
+            <circle cx="32" cy="44" r="5.5" fill="#8cc8b9" />
+          </svg>
+          <span>LUMINA</span>
+        </a>
+        <p class="backend" id="backend" data-state="checking">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="backend-text">Checking backend</span>
+        </p>
+      </header>
+
+      <main class="hero page">
+        <section class="intro">
+          <p class="eyebrow">Live voice demo</p>
+          <h1>Talk to Lumina.</h1>
+          <p class="lede">
+            Lumina is an AI voice agent for e-commerce support. Start a call and ask it to track,
+            cancel, return or refund one of the demo orders below.
+          </p>
+          <ul class="facts">
+            <li>Runs in your browser. It will ask to use your microphone.</li>
+            <li>Every order here is made up. No real customer data is involved.</li>
+          </ul>
+        </section>
+
+        <section class="console" id="console" data-state="idle" aria-labelledby="console-title">
+          <div class="console-top">
+            <span id="console-title">Voice line</span>
+            <span id="timer" aria-hidden="true">00:00</span>
+          </div>
+
+          <div class="stage">
+            <div class="orb" id="orb" aria-hidden="true">
+              <span class="ring ring-a"></span>
+              <span class="ring ring-b"></span>
+              <span class="core"></span>
+            </div>
+            <p class="status" id="status" role="status" aria-live="polite">Ready when you are</p>
+            <p class="detail" id="detail">Press start, then just speak.</p>
+          </div>
+
+          <div class="controls">
+            <button class="btn primary" id="start" type="button">Start call</button>
+            <button class="btn ghost" id="mute" type="button" aria-pressed="false" hidden>
+              Mute
+            </button>
+            <button class="btn danger" id="end" type="button" hidden>End call</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <section class="try page" aria-labelledby="try-title">
+      <div class="try-head">
+        <p class="eyebrow dark">Things to try</p>
+        <h2 id="try-title">Say one of these once the call is live</h2>
+        <p>
+          For anything except tracking, Lumina asks for the email on the order. Say it the way you
+          would on the phone, for example “jordan at example dot test”.
+        </p>
+      </div>
+      <ol class="cards" id="cards"></ol>
+    </section>
+
+    <footer class="foot page">
+      <p>
+        Calls are handled by Retell AI and may be recorded. Changes you make to a demo order are
+        temporary and reset on their own.
+      </p>
+      <p>
+        <a href="https://github.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent">
+          Source on GitHub
+        </a>
+      </p>
+    </footer>
+
   </body>
 </html>

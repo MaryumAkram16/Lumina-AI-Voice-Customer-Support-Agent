@@ -2,6 +2,8 @@
 
 A Vercel serverless backend that Retell's custom functions can call instead of the n8n webhook. It applies the same business rules as the n8n workflow and returns the same response fields, so the Retell agent prompts stay as they are. The n8n workflow is untouched and remains the no-code option.
 
+It also serves a demo page with a "Start call" button, so anyone with the link can talk to the agent from their browser.
+
 By default it serves synthetic demo orders, so a public deployment never reads or changes real data.
 
 ## Architecture
@@ -50,20 +52,23 @@ lib/
   schema.ts      zod schemas for what Retell sends.
   config.ts      Environment variables and the fail-fast check.
   data/          OrderRepository interface, demo adapter, Google Sheets adapter.
+web/       The demo page (Vite + TypeScript). Built into public/, which Vercel serves.
 tests/     Unit, contract, security and integration tests (vitest).
 scripts/   smoke.ts (checks a live deployment), dev-server.ts (local server).
 ```
 
 ## Endpoints
 
-| Method | Path                      | Purpose                                                                |
-| ------ | ------------------------- | ---------------------------------------------------------------------- |
-| `GET`  | `/api/health`             | Liveness and which data source is active. Unsigned.                    |
-| `POST` | `/api/track-order`        | Order status, carrier and delivery date.                               |
-| `POST` | `/api/cancel-order`       | Cancellation check; cancels when `cancellation_initiated` is `"yes"`.  |
-| `POST` | `/api/return-item`        | Return check; starts the return when `return_initiated` is `"yes"`.    |
-| `POST` | `/api/refund-eligibility` | Refund check; starts the refund when `refund_initiated` is `"yes"`.    |
-| `POST` | `/api/order`              | All of the above on one URL, routed by `intent`, like the n8n webhook. |
+| Method | Path                      | Purpose                                                                        |
+| ------ | ------------------------- | ------------------------------------------------------------------------------ |
+| `GET`  | `/api/health`             | Liveness and which data source is active. Unsigned.                            |
+| `POST` | `/api/track-order`        | Order status, carrier and delivery date.                                       |
+| `POST` | `/api/cancel-order`       | Cancellation check; cancels when `cancellation_initiated` is `"yes"`.          |
+| `POST` | `/api/return-item`        | Return check; starts the return when `return_initiated` is `"yes"`.            |
+| `POST` | `/api/refund-eligibility` | Refund check; starts the refund when `refund_initiated` is `"yes"`.            |
+| `POST` | `/api/order`              | All of the above on one URL, routed by `intent`, like the n8n webhook.         |
+| `POST` | `/api/create-web-call`    | Called by the demo page only. Starts a browser call with the configured agent. |
+| `GET`  | `/`                       | The demo page.                                                                 |
 
 Why both: the n8n workflow is one webhook that switches on `intent`, so `/api/order` is a drop-in replacement for that URL. The dedicated routes give each Retell function its own URL, which is easier to read in logs and cannot be misrouted by a badly worded `intent`. All six share the same pipeline and the same rules module.
 
@@ -118,6 +123,36 @@ One JSON object. Every response has `success`, `message` (a short sentence the a
 | 429                   | Rate limit. Includes `Retry-After`.                                                            |
 | 500 / 503             | Internal error / order data source unavailable. No details in the body.                        |
 
+## Demo page
+
+`web/` is a small page that lets a visitor talk to the agent in the browser. It is built with Vite into `public/` during `npm run build`, and Vercel serves it from the same deployment as the API, so there is one URL for everything.
+
+How a call starts:
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (demo page)
+    participant S as This backend
+    participant R as Retell
+    B->>S: POST /api/create-web-call
+    S->>R: create web call (API key, RETELL_AGENT_ID)
+    R-->>S: call ID + short-lived access token
+    S-->>B: access token
+    B->>R: join the call with the token (audio)
+    R->>S: signed custom-function calls (/api/track-order, …)
+```
+
+The Retell API key never reaches the browser. The page uses Retell's `retell-client-js-sdk` with its one request rerouted to `/api/create-web-call`. That endpoint:
+
+- uses the agent in `RETELL_AGENT_ID` and ignores everything in the request body, so a visitor cannot pick another agent or override its settings;
+- only answers pages served from this deployment, or origins in `ALLOWED_ORIGINS`;
+- is rate limited per visitor and overall (`WEB_CALL_*`), because every call uses Retell minutes;
+- returns 503 until `RETELL_AGENT_ID` is set, and the page then shows the demo as offline.
+
+The page shows the call state, a timer, mute and end buttons, and a sound-level indicator. It does not show a live transcript: Retell's client only streams the transcript when the browser holds a Retell key, which this setup avoids on purpose.
+
+To put the button on another site (the landing page, for example), add that site's origin to `ALLOWED_ORIGINS`.
+
 ## Business rules
 
 Ported from the n8n Code nodes. Tests in `tests/rules.test.ts`.
@@ -142,24 +177,28 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 
 ## Environment variables
 
-| Variable                      | Required    | Default  | Purpose                                                                                  |
-| ----------------------------- | ----------- | -------- | ---------------------------------------------------------------------------------------- |
-| `RETELL_API_KEY`              | Yes         |          | Verifies the `X-Retell-Signature` header. Use the Retell API key with the webhook badge. |
-| `DATA_SOURCE`                 | No          | `demo`   | `demo` or `sheets`.                                                                      |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | If `sheets` |          | Service-account key file as one line of JSON, or base64.                                 |
-| `GOOGLE_SHEET_ID`             | If `sheets` |          | Spreadsheet ID from the sheet URL.                                                       |
-| `GOOGLE_SHEET_TAB`            | No          | `Orders` | Tab holding the orders.                                                                  |
-| `ALLOWED_ORIGINS`             | No          | empty    | Exact browser origins allowed by CORS, comma-separated. Empty means none.                |
-| `RATE_LIMIT_WINDOW_MS`        | No          | `60000`  | Rate-limit window.                                                                       |
-| `RATE_LIMIT_MAX_PER_IP`       | No          | `120`    | Requests per window per IP.                                                              |
-| `RATE_LIMIT_MAX_PER_CALL`     | No          | `20`     | Requests per window per Retell `call_id` (full payload only).                            |
-| `MAX_BODY_BYTES`              | No          | `102400` | Largest accepted body.                                                                   |
-| `SHEETS_TIMEOUT_MS`           | No          | `1500`   | Timeout per Google Sheets attempt.                                                       |
-| `SHEETS_MAX_RETRIES`          | No          | `1`      | Retries after the first attempt, with exponential backoff.                               |
-| `SHEETS_BACKOFF_MS`           | No          | `100`    | First backoff delay.                                                                     |
-| `SHEETS_CACHE_TTL_MS`         | No          | `15000`  | How long one read of the sheet is reused. `0` disables.                                  |
-| `BUSINESS_TIMEZONE`           | No          | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                     |
-| `CURRENCY_LABEL`              | No          | `PKR`    | Spoken after refund amounts.                                                             |
+| Variable                        | Required          | Default  | Purpose                                                                                  |
+| ------------------------------- | ----------------- | -------- | ---------------------------------------------------------------------------------------- |
+| `RETELL_API_KEY`                | Yes               |          | Verifies the `X-Retell-Signature` header. Use the Retell API key with the webhook badge. |
+| `RETELL_AGENT_ID`               | For the demo page |          | The agent the page's "Start call" button rings. Empty switches browser calls off.        |
+| `WEB_CALL_MAX_PER_IP`           | No                | `5`      | Browser calls one visitor may start per window.                                          |
+| `WEB_CALL_MAX_GLOBAL`           | No                | `40`     | Browser calls all visitors together may start per window.                                |
+| `WEB_CALL_RATE_LIMIT_WINDOW_MS` | No                | `600000` | Window for the two limits above (10 minutes).                                            |
+| `DATA_SOURCE`                   | No                | `demo`   | `demo` or `sheets`.                                                                      |
+| `GOOGLE_SERVICE_ACCOUNT_JSON`   | If `sheets`       |          | Service-account key file as one line of JSON, or base64.                                 |
+| `GOOGLE_SHEET_ID`               | If `sheets`       |          | Spreadsheet ID from the sheet URL.                                                       |
+| `GOOGLE_SHEET_TAB`              | No                | `Orders` | Tab holding the orders.                                                                  |
+| `ALLOWED_ORIGINS`               | No                | empty    | Exact browser origins allowed by CORS, comma-separated. Empty means none.                |
+| `RATE_LIMIT_WINDOW_MS`          | No                | `60000`  | Rate-limit window.                                                                       |
+| `RATE_LIMIT_MAX_PER_IP`         | No                | `120`    | Requests per window per IP.                                                              |
+| `RATE_LIMIT_MAX_PER_CALL`       | No                | `20`     | Requests per window per Retell `call_id` (full payload only).                            |
+| `MAX_BODY_BYTES`                | No                | `102400` | Largest accepted body.                                                                   |
+| `SHEETS_TIMEOUT_MS`             | No                | `1500`   | Timeout per Google Sheets attempt.                                                       |
+| `SHEETS_MAX_RETRIES`            | No                | `1`      | Retries after the first attempt, with exponential backoff.                               |
+| `SHEETS_BACKOFF_MS`             | No                | `100`    | First backoff delay.                                                                     |
+| `SHEETS_CACHE_TTL_MS`           | No                | `15000`  | How long one read of the sheet is reused. `0` disables.                                  |
+| `BUSINESS_TIMEZONE`             | No                | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                     |
+| `CURRENCY_LABEL`                | No                | `PKR`    | Spoken after refund amounts.                                                             |
 
 If a required variable is missing or invalid, every request gets a generic 500, `/api/health` returns 503, and the log names the variable (never its value). In production a placeholder-looking `RETELL_API_KEY` is rejected too.
 
@@ -183,11 +222,17 @@ With the Vercel CLI (needs a Vercel login):
 npm run dev
 ```
 
-Without it, using the bundled Node server on port 3000:
+Without it, build the page once and use the bundled Node server on port 3000:
+
+```bash
+npm run build:web
+```
 
 ```bash
 npm run dev:local
 ```
+
+Open http://localhost:3000 for the demo page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
 
 Then, in another terminal, send signed sample requests:
 
@@ -219,6 +264,10 @@ npx vercel link
 
 ```bash
 npx vercel env add RETELL_API_KEY production
+```
+
+```bash
+npx vercel env add RETELL_AGENT_ID production
 ```
 
 Then deploy with one command:

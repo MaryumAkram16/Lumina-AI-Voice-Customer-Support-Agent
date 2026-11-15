@@ -15,6 +15,10 @@ export interface AppConfig {
   production: boolean;
   dataSource: 'demo' | 'sheets';
   retellApiKey: string;
+  /** Agent the browser demo calls. Null switches the web-call endpoint off. */
+  retellAgentId: string | null;
+  /** Limits on starting browser calls, which cost Retell minutes. */
+  webCall: { windowMs: number; maxPerIp: number; maxGlobal: number };
   allowedOrigins: readonly string[];
   maxBodyBytes: number;
   rateLimit: { windowMs: number; maxPerIp: number; maxPerCall: number };
@@ -78,6 +82,11 @@ export function loadConfig(env: Env = process.env): AppConfig {
     problems.push('RETELL_API_KEY looks like a placeholder');
   }
 
+  const retellAgentId = env.RETELL_AGENT_ID?.trim() || null;
+  if (retellAgentId && !/^[A-Za-z0-9_-]{6,100}$/.test(retellAgentId)) {
+    problems.push('RETELL_AGENT_ID is not a valid agent ID');
+  }
+
   const allowedOrigins = (env.ALLOWED_ORIGINS ?? '')
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''))
@@ -125,6 +134,12 @@ export function loadConfig(env: Env = process.env): AppConfig {
     production,
     dataSource,
     retellApiKey,
+    retellAgentId,
+    webCall: {
+      windowMs: int(env, 'WEB_CALL_RATE_LIMIT_WINDOW_MS', 600_000, 1000, 86_400_000, problems),
+      maxPerIp: int(env, 'WEB_CALL_MAX_PER_IP', 5, 1, 10_000, problems),
+      maxGlobal: int(env, 'WEB_CALL_MAX_GLOBAL', 40, 1, 100_000, problems),
+    },
     allowedOrigins,
     maxBodyBytes: int(env, 'MAX_BODY_BYTES', 102_400, 1024, 1_048_576, problems),
     rateLimit: {
