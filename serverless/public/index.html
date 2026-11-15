@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Lumina serverless backend</title>
+    <style>
+      body {
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        max-width: 40rem;
+        margin: 4rem auto;
+        padding: 0 1rem;
+        color: #1c2733;
+      }
+      code {
+        background: #eef1f4;
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
+      }
+      li {
+        margin: 0.25rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Lumina serverless backend</h1>
+    <p>
+      Webhook backend for the Lumina voice agent. Order endpoints accept signed
+      <code>POST</code> requests from Retell only.
+    </p>
+    <ul>
+      <li><code>GET /api/health</code></li>
+      <li><code>POST /api/track-order</code></li>
+      <li><code>POST /api/cancel-order</code></li>
+      <li><code>POST /api/return-item</code></li>
+      <li><code>POST /api/refund-eligibility</code></li>
+      <li><code>POST /api/order</code></li>
+    </ul>
+  </body>
+</html>

@@ -11,3 +11,9 @@ landing-page/node_modules/
 landing-page/dist/
 landing-page/.manus-logs/
 landing-page/.vite/
+
+# Serverless backend
+serverless/node_modules/
+serverless/.vercel/
+serverless/coverage/
+.vercel/
