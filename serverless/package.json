@@ -10,7 +10,9 @@
   "scripts": {
     "dev": "npx vercel dev",
     "dev:local": "tsx --env-file-if-exists=.env scripts/dev-server.ts",
-    "build": "tsc --noEmit -p tsconfig.json",
+    "dev:web": "vite --config web/vite.config.ts",
+    "build": "tsc --noEmit -p tsconfig.json && vite build --config web/vite.config.ts",
+    "build:web": "vite build --config web/vite.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
@@ -21,6 +23,7 @@
     "deploy": "npx vercel deploy --prod"
   },
   "dependencies": {
+    "retell-client-js-sdk": "^3.0.4",
     "retell-sdk": "^6.2.21",
     "zod": "^4.6.7"
   },
@@ -33,6 +36,7 @@
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.2",
+    "vite": "^8.3.8",
     "vitest": "^5.1.0"
   },
   "overrides": {

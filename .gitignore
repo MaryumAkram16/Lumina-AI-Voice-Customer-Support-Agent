@@ -16,4 +16,5 @@ landing-page/.vite/
 serverless/node_modules/
 serverless/.vercel/
 serverless/coverage/
+serverless/public/
 .vercel/

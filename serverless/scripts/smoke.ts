@@ -68,6 +68,25 @@ check('health is ok', health, health.status === 200 && health.body.status === 'o
 const demo = health.body.data_source === 'demo';
 console.log(`      data source: ${String(health.body.data_source)}`);
 
+const pageResponse = await fetch(`${baseUrl}/`);
+const pageHtml = await pageResponse.text();
+check(
+  'demo page is served',
+  { status: pageResponse.status, body: {}, ms: 0 },
+  pageResponse.status === 200 && pageHtml.includes('Talk to Lumina'),
+);
+console.log(
+  `      browser calls: ${health.body.web_call === true ? 'on' : 'off (RETELL_AGENT_ID not set)'}`,
+);
+
+// No Origin header, as from a script: must be refused without starting a call.
+const strayWebCall = await call('/api/create-web-call', {}, { sign: false });
+check(
+  'web call refuses requests that are not from the page',
+  strayWebCall,
+  strayWebCall.status === 403,
+);
+
 const unsigned = await call('/api/track-order', track001, { sign: false });
 check('unsigned request is rejected', unsigned, unsigned.status === 401);
 
