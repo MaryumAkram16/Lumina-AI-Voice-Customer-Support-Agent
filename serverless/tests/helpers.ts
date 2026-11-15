@@ -56,7 +56,11 @@ export interface TestApp {
 }
 
 export function makeApp(
-  options: { env?: Record<string, string>; repository?: OrderRepository } = {},
+  options: {
+    env?: Record<string, string>;
+    repository?: OrderRepository;
+    createWebCall?: (agentId: string) => Promise<Record<string, unknown>>;
+  } = {},
 ): TestApp {
   const logs: string[] = [];
   const repository = options.repository ?? new DemoOrderRepository(undefined, () => NOW);
@@ -65,6 +69,7 @@ export function makeApp(
     repository,
     logger: createLogger((line) => logs.push(line)),
     now: () => NOW,
+    ...(options.createWebCall ? { createWebCall: options.createWebCall } : {}),
   });
   return { app, logs, repository };
 }

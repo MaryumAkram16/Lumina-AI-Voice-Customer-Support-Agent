@@ -8,6 +8,7 @@ import { resolveIntent, type Intent } from './rules.js';
 import { parseRequestBody } from './schema.js';
 import { OrderService } from './service.js';
 import { SIGNATURE_HEADER, verifyRetellSignature } from './signature.js';
+import { createRetellWebCall } from './web-call.js';
 
 /** A dedicated route fixes the intent; `order` reads it from the body like n8n does. */
 export type Route = Intent | 'order';
@@ -17,6 +18,8 @@ export interface AppDeps {
   repository?: OrderRepository;
   logger?: Logger;
   now?: () => Date;
+  /** Asks Retell for a web call. Injectable so tests never call Retell. */
+  createWebCall?: (agentId: string) => Promise<Record<string, unknown>>;
 }
 
 type ErrorCode =
@@ -30,6 +33,8 @@ type ErrorCode =
   | 'invalid_request'
   | 'invalid_intent'
   | 'service_unavailable'
+  | 'web_call_not_configured'
+  | 'web_call_failed'
   | 'internal_error';
 
 /** Every error still carries a sentence the agent can say out loud. */
@@ -46,8 +51,20 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     'I can help with tracking an order, cancelling an order, a return, or a refund. Which would you like?',
   service_unavailable:
     "I'm having trouble reaching our order system right now. Please try again in a moment.",
+  web_call_not_configured: 'The voice demo is not switched on for this deployment.',
+  web_call_failed: "I couldn't start the call. Please try again in a moment.",
   internal_error: 'Sorry, something went wrong on my side. Please try again in a moment.',
 };
+
+/** The only fields of Retell's create-web-call response the browser needs to join. */
+const WEB_CALL_FIELDS = [
+  'call_id',
+  'access_token',
+  'transport',
+  'url',
+  'ice_servers',
+  'expires_at',
+];
 
 const SECURITY_HEADERS: Record<string, string> = {
   'content-type': 'application/json; charset=utf-8',
@@ -99,6 +116,7 @@ async function readBody(request: Request, maxBytes: number): Promise<string | nu
 
 export interface App {
   handle(route: Route, request: Request): Promise<Response>;
+  webCall(request: Request): Promise<Response>;
   health(request: Request): Response;
 }
 
@@ -108,6 +126,9 @@ export function createApp(deps: AppDeps): App {
   const now = deps.now ?? (() => new Date());
   const repository = deps.repository ?? createRepository(config);
   const limiter = new RateLimiter(config.rateLimit.windowMs);
+  const webCallLimiter = new RateLimiter(config.webCall.windowMs);
+  const createWebCall =
+    deps.createWebCall ?? ((agentId) => createRetellWebCall(config.retellApiKey, agentId));
   // One service per app, so its per-order locks span requests.
   const service = new OrderService({
     repository,
@@ -288,6 +309,102 @@ export function createApp(deps: AppDeps): App {
     }
   }
 
+  /** True when the page that sent the request is this deployment or an allowed origin. */
+  function isTrustedOrigin(request: Request): boolean {
+    const origin = request.headers.get('origin');
+    if (!origin) return false;
+    if (config.allowedOrigins.includes(origin.replace(/\/$/, ''))) return true;
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return false;
+    }
+    const hosts = [
+      request.headers.get('x-forwarded-host'),
+      request.headers.get('host'),
+      new URL(request.url).host,
+    ];
+    return hosts.some((host) => host?.split(',')[0]?.trim().toLowerCase() === originHost);
+  }
+
+  /**
+   * Starts a browser call for the demo page. This is the one endpoint a
+   * browser calls, so it cannot be signed by Retell. Instead: the page must be
+   * served from this deployment (or an allowed origin), the agent is fixed by
+   * configuration and nothing in the request body is used, and starts are
+   * rate limited per IP and overall because every call costs Retell minutes.
+   */
+  async function webCall(request: Request): Promise<Response> {
+    const requestId = randomUUID();
+    const started = Date.now();
+    const logger = baseLogger.child({ request_id: requestId, route: 'create_web_call' });
+    const done = (response: Response, fields: Record<string, unknown> = {}): Response => {
+      logger.log(response.status >= 500 ? 'error' : 'info', 'request_completed', {
+        status: response.status,
+        duration_ms: Date.now() - started,
+        ...fields,
+      });
+      return response;
+    };
+
+    try {
+      if (request.method !== 'POST') {
+        return done(fail(405, 'method_not_allowed', requestId, { allow: 'POST' }));
+      }
+      if (!isTrustedOrigin(request)) return done(fail(403, 'origin_not_allowed', requestId));
+      const cors = corsHeaders(request.headers.get('origin')) ?? {};
+
+      const agentId = config.retellAgentId;
+      if (!agentId) return done(fail(503, 'web_call_not_configured', requestId, cors));
+
+      const perIp = webCallLimiter.check(`ip:${clientIp(request)}`, config.webCall.maxPerIp);
+      const overall = perIp.allowed ? webCallLimiter.check('all', config.webCall.maxGlobal) : perIp;
+      if (!overall.allowed) {
+        return done(
+          fail(429, 'rate_limited', requestId, {
+            ...cors,
+            'retry-after': String(overall.retryAfterSeconds),
+          }),
+        );
+      }
+
+      // The body is read only to enforce the size limit. Its content is ignored.
+      if ((await readBody(request, 4096)) === null) {
+        return done(fail(413, 'payload_too_large', requestId, cors));
+      }
+
+      let call: Record<string, unknown>;
+      try {
+        call = await createWebCall(agentId);
+      } catch (error) {
+        logger.log('error', 'web_call_failed', {
+          error_name: error instanceof Error ? error.name : 'unknown',
+          detail: error instanceof Error ? error.message : 'non-error thrown',
+        });
+        return done(fail(502, 'web_call_failed', requestId, cors));
+      }
+      if (typeof call.access_token !== 'string' || typeof call.call_id !== 'string') {
+        logger.log('error', 'web_call_failed', { detail: 'response had no access token' });
+        return done(fail(502, 'web_call_failed', requestId, cors));
+      }
+
+      const body = Object.fromEntries(
+        WEB_CALL_FIELDS.filter((field) => call[field] !== undefined).map((field) => [
+          field,
+          call[field],
+        ]),
+      );
+      return done(respond(200, body, requestId, cors), { call_id: call.call_id });
+    } catch (error) {
+      logger.log('error', 'unhandled_error', {
+        error_name: error instanceof Error ? error.name : 'unknown',
+        detail: error instanceof Error ? error.message : 'non-error thrown',
+      });
+      return done(fail(500, 'internal_error', requestId));
+    }
+  }
+
   function health(request: Request): Response {
     const requestId = randomUUID();
     if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -295,12 +412,17 @@ export function createApp(deps: AppDeps): App {
     }
     return respond(
       200,
-      { status: 'ok', service: 'lumina-serverless', data_source: repository.name },
+      {
+        status: 'ok',
+        service: 'lumina-serverless',
+        data_source: repository.name,
+        web_call: config.retellAgentId !== null,
+      },
       requestId,
     );
   }
 
-  return { handle, health };
+  return { handle, webCall, health };
 }
 
 // ---------------------------------------------------------------------------
@@ -343,6 +465,19 @@ export function routeHandler(route: Route): (request: Request) => Promise<Respon
       return misconfigured(error, 500);
     }
     return app.handle(route, request);
+  };
+}
+
+/** Handler for `api/create-web-call.ts`. */
+export function webCallHandler(): (request: Request) => Promise<Response> {
+  return async (request) => {
+    let app: App;
+    try {
+      app = getDefaultApp();
+    } catch (error) {
+      return misconfigured(error, 500);
+    }
+    return app.webCall(request);
   };
 }
 
