@@ -33,8 +33,8 @@ This demo shows the *Lumina AI Voice Customer Support Agent* handling a live e-c
 
 > Placeholders: fill these in after deploying [`serverless/`](serverless/).
 
-- **Hosted backend:** `https://YOUR-PROJECT.vercel.app` (health check: `https://YOUR-PROJECT.vercel.app/api/health`)
-- **Retell test call:** `ADD-RETELL-WEB-CALL-OR-PHONE-LINK`
+- **Live demo page:** `https://YOUR-PROJECT.vercel.app` (press **Start call** and talk to Lumina in the browser)
+- **Backend health check:** `https://YOUR-PROJECT.vercel.app/api/health`
 
 The hosted demo uses synthetic orders only. Phrases to try:
 
@@ -99,6 +99,7 @@ The E-Commerce Voice AI System provides an automated, human-like voice interface
 - **Logic**: JavaScript (Node.js) within n8n Code nodes
 - **Communication**: Webhooks for real-time data exchange
 - **Serverless Backend (optional)**: Vercel Functions, Node.js and TypeScript, zod validation, vitest (see [`serverless/`](serverless/))
+- **Demo Page**: Vite and TypeScript with the Retell web client, served from the same Vercel deployment (see [`serverless/web/`](serverless/web/))
 
 ## Two Backends
 

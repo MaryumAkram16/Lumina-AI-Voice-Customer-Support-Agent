@@ -46,7 +46,8 @@ Please open a private security advisory on the GitHub repository (Security tab, 
 | CORS | Closed by default. Only exact origins in `ALLOWED_ORIGINS`; wildcards are refused at startup. | `lib/http.ts`, `lib/config.ts` |
 | Secrets | Read from environment variables only. A missing or placeholder key stops the service (500 on every request, 503 on health) and the log names the variable, not the value. `.env` and key files are git-ignored. | `lib/config.ts` |
 | Data isolation | `DATA_SOURCE` defaults to synthetic demo orders, so a public demo cannot reach real data. | `lib/config.ts` |
-| Supply chain | Two runtime dependencies (`retell-sdk`, `zod`). CI runs `npm audit` and a gitleaks scan of the full history on every pull request. | `.github/workflows/serverless-ci.yml` |
+| Browser calls | `/api/create-web-call` is the one endpoint a browser calls, so Retell cannot sign it. It keeps the API key on the server, uses only the configured agent and ignores the request body, requires the page's own origin or an allowed one, and limits calls per visitor and overall. Retell errors are replaced by a generic 502. | `lib/http.ts`, `lib/web-call.ts` |
+| Supply chain | Three runtime dependencies (`retell-sdk`, `zod`, and `retell-client-js-sdk` in the page). CI runs `npm audit` and a gitleaks scan of the full history on every pull request. | `.github/workflows/serverless-ci.yml` |
 
 ## Running the security tests
 
@@ -78,4 +79,7 @@ gitleaks detect --source . --redact
 - **Tracking needs only the order number**, as in the n8n workflow. It returns status, carrier and delivery date.
 - **Concurrent writes from different instances** to Google Sheets can both pass the "not yet cancelled" check. Both write the same values, so the result is the same, but a database with a unique constraint is the right tool at volume (see `OPERATIONS.md`).
 - **Demo mode keeps changes in memory** and resets when the instance is recycled.
+- **Anyone with the link can start a call, and calls cost Retell minutes.** The origin check stops other websites, not a script that fakes the header, so the real cap is the rate limit, which is per instance. Before sharing the link widely, set a short maximum call duration on the agent, keep `WEB_CALL_MAX_GLOBAL` low, and consider the Vercel Firewall or a spending alert in Retell.
+- **The demo page has no Content-Security-Policy** beyond the framing and sniffing headers, because the call library opens WebRTC connections to Retell's media servers and a strict policy could not be tested against a live call here.
+- **Calls may be recorded by Retell** according to the agent's data-storage setting. The page says so; check that this matches what you want for a public demo.
 - **Not a compliance certification.** The boundaries in the main README (GDPR, PCI, HIPAA, consent, retention) still apply.
