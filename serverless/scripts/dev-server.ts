@@ -47,10 +47,8 @@ const server = createServer((req, res) => {
 
     if (!handler) {
       // Static files from the built page (`npm run build:web`).
-      const relative = normalize(url.pathname === '/' ? 'index.html' : url.pathname).replace(
-        /^([/\\]|\.\.)+/,
-        '',
-      );
+      const path = url.pathname.endsWith('/') ? `${url.pathname}index.html` : url.pathname;
+      const relative = normalize(path).replace(/^([/\\]|\.\.)+/, '');
       const file = join(publicDir, relative);
       try {
         if (!file.startsWith(publicDir)) throw new Error('outside public');
@@ -61,7 +59,7 @@ const server = createServer((req, res) => {
           })
           .end(content);
       } catch {
-        const hint = url.pathname === '/' ? ' Run "npm run build:web" first.' : '';
+        const hint = url.pathname === '/' ? ' Run "npm run build" first.' : '';
         res.writeHead(404, { 'content-type': 'text/plain' }).end(`Not found.${hint}`);
       }
       return;

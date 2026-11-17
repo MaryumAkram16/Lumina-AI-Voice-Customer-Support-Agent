@@ -47,7 +47,7 @@ export type OrderPatch = Partial<
 >;
 
 export interface OrderRepository {
-  readonly name: 'demo' | 'sheets';
+  readonly name: 'demo' | 'sheets' | 'supabase';
   /** Look up one order. `orderId` is matched on its canonical form (see `canonicalOrderId`). */
   findByOrderId(orderId: string): Promise<OrderRecord | null>;
   /** Persist a patch. Must be safe to repeat with the same arguments. */

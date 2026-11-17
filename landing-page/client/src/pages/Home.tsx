@@ -169,6 +169,10 @@ export default function Home() {
     scrollToId(id);
   };
 
+  // Set by the combined Vercel build (serverless/scripts/build-landing.mjs).
+  // Empty on GitHub Pages, where there is no backend to call.
+  const liveCallUrl = import.meta.env.VITE_LIVE_DEMO_URL as string | undefined;
+
   return (
     <div className="site-shell">
       <header className={`site-nav ${menuOpen ? "is-open" : ""}`}>
@@ -184,6 +188,7 @@ export default function Home() {
           <a href="#proof">Proof</a>
           <a href="#packages">Packages</a>
           <a href="#faq">FAQ</a>
+          {liveCallUrl ? <a href={liveCallUrl}>Talk to Lumina</a> : null}
         </nav>
         <button className="nav-cta" type="button" onClick={() => scrollToId("packages")}>
           View the kit <ArrowUpRight size={16} />
@@ -195,6 +200,7 @@ export default function Home() {
           {["route", "demo", "architecture", "checklist", "proof", "packages", "faq"].map((id) => (
             <button key={id} type="button" onClick={() => handleNav(id)}>{id === "route" ? "The route" : id === "demo" ? "Live demo" : id === "architecture" ? "Architecture" : id === "checklist" ? "Checklist" : id === "proof" ? "Proof" : id === "packages" ? "Packages" : "FAQ"}</button>
           ))}
+          {liveCallUrl ? <a className="mobile-menu-cta" href={liveCallUrl}>Talk to Lumina live <ArrowUpRight size={16} /></a> : null}
           <button className="mobile-menu-cta" type="button" onClick={() => handleNav("packages")}>View the kit <ArrowUpRight size={16} /></button>
         </div>
       </header>
@@ -209,7 +215,8 @@ export default function Home() {
               <h1>Give every support call a <em>clear route.</em></h1>
               <p className="hero-lede">Lumina is a self-hosted voice-support template for e-commerce teams that want the handoff from caller to verified order response to stay visible.</p>
               <div className="hero-actions">
-                <button className="button button-primary" type="button" onClick={() => scrollToId("demo")}>Run the safe demo <ArrowDownRight size={17} /></button>
+                {liveCallUrl ? <a className="button button-primary" href={liveCallUrl}>Talk to Lumina live <ArrowUpRight size={17} /></a> : null}
+                <button className={liveCallUrl ? "text-button light-text-button" : "button button-primary"} type="button" onClick={() => scrollToId("demo")}>Run the safe demo <ArrowDownRight size={17} /></button>
                 <button className="text-button light-text-button" type="button" onClick={() => scrollToId("route")}>See how it routes <ChevronRight size={16} /></button>
               </div>
               <div className="hero-meta">

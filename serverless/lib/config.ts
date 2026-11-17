@@ -13,7 +13,7 @@ export class ConfigError extends Error {
 
 export interface AppConfig {
   production: boolean;
-  dataSource: 'demo' | 'sheets';
+  dataSource: 'demo' | 'sheets' | 'supabase';
   retellApiKey: string;
   /** Agent the browser demo calls. Null switches the web-call endpoint off. */
   retellAgentId: string | null;
@@ -32,6 +32,14 @@ export interface AppConfig {
     retries: number;
     backoffMs: number;
     cacheTtlMs: number;
+  } | null;
+  supabase: {
+    url: string;
+    serviceKey: string;
+    table: string;
+    timeoutMs: number;
+    retries: number;
+    backoffMs: number;
   } | null;
 }
 
@@ -68,10 +76,11 @@ export function loadConfig(env: Env = process.env): AppConfig {
 
   // Default to the demo adapter so a deployment never touches real data unless asked to.
   const dataSourceRaw = (env.DATA_SOURCE?.trim() || 'demo').toLowerCase();
-  if (dataSourceRaw !== 'demo' && dataSourceRaw !== 'sheets') {
-    problems.push('DATA_SOURCE must be "demo" or "sheets"');
+  if (dataSourceRaw !== 'demo' && dataSourceRaw !== 'sheets' && dataSourceRaw !== 'supabase') {
+    problems.push('DATA_SOURCE must be "demo", "sheets" or "supabase"');
   }
-  const dataSource = dataSourceRaw === 'sheets' ? 'sheets' : 'demo';
+  const dataSource =
+    dataSourceRaw === 'sheets' || dataSourceRaw === 'supabase' ? dataSourceRaw : 'demo';
 
   // Required everywhere, not only in production: without it requests cannot
   // be verified, and Vercel preview deployments are public URLs too.
@@ -120,6 +129,38 @@ export function loadConfig(env: Env = process.env): AppConfig {
     };
   }
 
+  let supabase: AppConfig['supabase'] = null;
+  if (dataSource === 'supabase') {
+    const url = (env.SUPABASE_URL?.trim() ?? '').replace(/\/+$/, '');
+    // SUPABASE_SECRET_KEY is the newer name for the same server-only key.
+    const serviceKey = (env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY || '').trim();
+    const table = env.SUPABASE_TABLE?.trim() || 'orders';
+    if (!url) {
+      problems.push('SUPABASE_URL is required for DATA_SOURCE=supabase');
+    } else if (
+      !/^https:\/\/[^/\s]+$/.test(url) &&
+      !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url)
+    ) {
+      problems.push('SUPABASE_URL must be the project URL, e.g. https://abcd1234.supabase.co');
+    }
+    if (!serviceKey) {
+      problems.push('SUPABASE_SERVICE_ROLE_KEY is required for DATA_SOURCE=supabase');
+    } else if (serviceKey.startsWith('sb_publishable_')) {
+      problems.push('SUPABASE_SERVICE_ROLE_KEY must be the secret key, not the publishable key');
+    }
+    if (!/^[A-Za-z_][A-Za-z0-9_]{0,62}$/.test(table)) {
+      problems.push('SUPABASE_TABLE must be a plain table name');
+    }
+    supabase = {
+      url,
+      serviceKey,
+      table,
+      timeoutMs: int(env, 'SUPABASE_TIMEOUT_MS', 2000, 200, 10_000, problems),
+      retries: int(env, 'SUPABASE_MAX_RETRIES', 1, 0, 3, problems),
+      backoffMs: int(env, 'SUPABASE_BACKOFF_MS', 100, 10, 2000, problems),
+    };
+  }
+
   const businessTimeZone = env.BUSINESS_TIMEZONE?.trim() || 'UTC';
   try {
     new Intl.DateTimeFormat('en-CA', { timeZone: businessTimeZone });
@@ -150,6 +191,7 @@ export function loadConfig(env: Env = process.env): AppConfig {
     businessTimeZone,
     currency,
     sheets,
+    supabase,
   };
 
   if (problems.length > 0) throw new ConfigError(problems);

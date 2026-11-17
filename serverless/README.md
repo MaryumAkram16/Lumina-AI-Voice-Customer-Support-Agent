@@ -52,7 +52,7 @@ lib/
   schema.ts      zod schemas for what Retell sends.
   config.ts      Environment variables and the fail-fast check.
   data/          OrderRepository interface, demo adapter, Google Sheets adapter.
-web/       The demo page (Vite + TypeScript). Built into public/, which Vercel serves.
+web/       The demo page (Vite + TypeScript). Built into public/demo/, served at /demo/.
 tests/     Unit, contract, security and integration tests (vitest).
 scripts/   smoke.ts (checks a live deployment), dev-server.ts (local server).
 ```
@@ -125,7 +125,15 @@ One JSON object. Every response has `success`, `message` (a short sentence the a
 
 ## Demo page
 
-`web/` is a small page that lets a visitor talk to the agent in the browser. It is built with Vite into `public/` during `npm run build`, and Vercel serves it from the same deployment as the API, so there is one URL for everything.
+`web/` is a small page that lets a visitor talk to the agent in the browser. `npm run build` puts everything into `public/`, so one Vercel deployment serves one URL:
+
+| Path     | What                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| `/`      | The landing page from [`../landing-page`](../landing-page), built by `scripts/build-landing.mjs` |
+| `/demo/` | This call page (`web/`)                                                                          |
+| `/api/*` | The serverless functions                                                                         |
+
+The landing page shows a **Talk to Lumina** button linking to `/demo/` only in this combined build; its GitHub Pages build is unchanged.
 
 How a call starts:
 
@@ -184,7 +192,12 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 | `WEB_CALL_MAX_PER_IP`           | No                | `5`      | Browser calls one visitor may start per window.                                          |
 | `WEB_CALL_MAX_GLOBAL`           | No                | `40`     | Browser calls all visitors together may start per window.                                |
 | `WEB_CALL_RATE_LIMIT_WINDOW_MS` | No                | `600000` | Window for the two limits above (10 minutes).                                            |
-| `DATA_SOURCE`                   | No                | `demo`   | `demo` or `sheets`.                                                                      |
+| `DATA_SOURCE`                   | No                | `demo`   | `demo`, `sheets` or `supabase`.                                                          |
+| `SUPABASE_URL`                  | If `supabase`     |          | Project URL, e.g. `https://abcd1234.supabase.co`.                                        |
+| `SUPABASE_SERVICE_ROLE_KEY`     | If `supabase`     |          | Server-only `service_role` or `sb_secret_...` key. Never the anon/publishable key.       |
+| `SUPABASE_TABLE`                | No                | `orders` | Table created by `supabase/schema.sql`.                                                  |
+| `SUPABASE_TIMEOUT_MS`           | No                | `2000`   | Timeout per Supabase attempt.                                                            |
+| `SUPABASE_MAX_RETRIES`          | No                | `1`      | Retries after the first attempt, with exponential backoff.                               |
 | `GOOGLE_SERVICE_ACCOUNT_JSON`   | If `sheets`       |          | Service-account key file as one line of JSON, or base64.                                 |
 | `GOOGLE_SHEET_ID`               | If `sheets`       |          | Spreadsheet ID from the sheet URL.                                                       |
 | `GOOGLE_SHEET_TAB`              | No                | `Orders` | Tab holding the orders.                                                                  |
@@ -199,6 +212,16 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 | `SHEETS_CACHE_TTL_MS`           | No                | `15000`  | How long one read of the sheet is reused. `0` disables.                                  |
 | `BUSINESS_TIMEZONE`             | No                | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                     |
 | `CURRENCY_LABEL`                | No                | `PKR`    | Spoken after refund amounts.                                                             |
+
+### Using Supabase as the database
+
+1. Create a project at supabase.com.
+2. Open **SQL Editor → New query**, paste [`supabase/schema.sql`](supabase/schema.sql) and run it. It creates the `orders` table, turns on Row Level Security with no policies (so the public key can read nothing), and adds eight synthetic test orders.
+3. In **Project Settings → API**, copy the **Project URL** and the **service_role** (or **secret**) key.
+4. Set `DATA_SOURCE=supabase`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel, then redeploy.
+5. Check: `/api/health` reports `data_source: "supabase"`, and asking the agent about `ORD-TEST-001` finds the order.
+
+Order IDs are matched on letters and digits only (the generated `order_key` column), so speech-to-text variations still find the order. Load your real orders into the same table and delete the `ORD-TEST-*` rows when you go live.
 
 If a required variable is missing or invalid, every request gets a generic 500, `/api/health` returns 503, and the log names the variable (never its value). In production a placeholder-looking `RETELL_API_KEY` is rejected too.
 
@@ -222,17 +245,17 @@ With the Vercel CLI (needs a Vercel login):
 npm run dev
 ```
 
-Without it, build the page once and use the bundled Node server on port 3000:
+Without it, build the pages once (landing page and demo page; needs internet for the landing page's pnpm install) and use the bundled Node server on port 3000:
 
 ```bash
-npm run build:web
+npm run build
 ```
 
 ```bash
 npm run dev:local
 ```
 
-Open http://localhost:3000 for the demo page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
+Open http://localhost:3000 for the landing page and http://localhost:3000/demo/ for the call page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
 
 Then, in another terminal, send signed sample requests:
 
@@ -276,7 +299,9 @@ Then deploy with one command:
 npm run deploy
 ```
 
-If you import the repository in the Vercel dashboard instead, set **Root Directory** to `serverless`.
+`npm run deploy` runs from the repository root, because the build also needs `landing-page/`.
+
+If you import the repository in the Vercel dashboard instead (recommended), set **Root Directory** to `serverless`, leave **Framework Preset** on **Other**, and keep **Include files outside the root directory in the Build Step** switched on (the default), so the build can reach `landing-page/`.
 
 Verify the deployment (reads `RETELL_API_KEY` from the environment or `.env`):
 
