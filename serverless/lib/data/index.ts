@@ -2,6 +2,7 @@ import type { AppConfig } from '../config.js';
 import { DemoOrderRepository } from './demo-repository.js';
 import { GoogleTokenProvider, parseServiceAccount } from './google-auth.js';
 import { SheetsOrderRepository } from './sheets-repository.js';
+import { SupabaseOrderRepository } from './supabase-repository.js';
 import type { OrderRepository } from './types.js';
 
 /** Picks the data adapter from configuration (`DATA_SOURCE`). */
@@ -17,6 +18,9 @@ export function createRepository(
       options.timeoutMs,
     );
     return new SheetsOrderRepository(options, { fetchImpl, tokens });
+  }
+  if (config.dataSource === 'supabase' && config.supabase) {
+    return new SupabaseOrderRepository(config.supabase, { fetchImpl });
   }
   return new DemoOrderRepository();
 }

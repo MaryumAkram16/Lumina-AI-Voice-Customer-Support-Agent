@@ -184,7 +184,12 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 | `WEB_CALL_MAX_PER_IP`           | No                | `5`      | Browser calls one visitor may start per window.                                          |
 | `WEB_CALL_MAX_GLOBAL`           | No                | `40`     | Browser calls all visitors together may start per window.                                |
 | `WEB_CALL_RATE_LIMIT_WINDOW_MS` | No                | `600000` | Window for the two limits above (10 minutes).                                            |
-| `DATA_SOURCE`                   | No                | `demo`   | `demo` or `sheets`.                                                                      |
+| `DATA_SOURCE`                   | No                | `demo`   | `demo`, `sheets` or `supabase`.                                                          |
+| `SUPABASE_URL`                  | If `supabase`     |          | Project URL, e.g. `https://abcd1234.supabase.co`.                                        |
+| `SUPABASE_SERVICE_ROLE_KEY`     | If `supabase`     |          | Server-only `service_role` or `sb_secret_...` key. Never the anon/publishable key.       |
+| `SUPABASE_TABLE`                | No                | `orders` | Table created by `supabase/schema.sql`.                                                  |
+| `SUPABASE_TIMEOUT_MS`           | No                | `2000`   | Timeout per Supabase attempt.                                                            |
+| `SUPABASE_MAX_RETRIES`          | No                | `1`      | Retries after the first attempt, with exponential backoff.                               |
 | `GOOGLE_SERVICE_ACCOUNT_JSON`   | If `sheets`       |          | Service-account key file as one line of JSON, or base64.                                 |
 | `GOOGLE_SHEET_ID`               | If `sheets`       |          | Spreadsheet ID from the sheet URL.                                                       |
 | `GOOGLE_SHEET_TAB`              | No                | `Orders` | Tab holding the orders.                                                                  |
@@ -199,6 +204,16 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 | `SHEETS_CACHE_TTL_MS`           | No                | `15000`  | How long one read of the sheet is reused. `0` disables.                                  |
 | `BUSINESS_TIMEZONE`             | No                | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                     |
 | `CURRENCY_LABEL`                | No                | `PKR`    | Spoken after refund amounts.                                                             |
+
+### Using Supabase as the database
+
+1. Create a project at supabase.com.
+2. Open **SQL Editor → New query**, paste [`supabase/schema.sql`](supabase/schema.sql) and run it. It creates the `orders` table, turns on Row Level Security with no policies (so the public key can read nothing), and adds eight synthetic test orders.
+3. In **Project Settings → API**, copy the **Project URL** and the **service_role** (or **secret**) key.
+4. Set `DATA_SOURCE=supabase`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in Vercel, then redeploy.
+5. Check: `/api/health` reports `data_source: "supabase"`, and asking the agent about `ORD-TEST-001` finds the order.
+
+Order IDs are matched on letters and digits only (the generated `order_key` column), so speech-to-text variations still find the order. Load your real orders into the same table and delete the `ORD-TEST-*` rows when you go live.
 
 If a required variable is missing or invalid, every request gets a generic 500, `/api/health` returns 503, and the log names the variable (never its value). In production a placeholder-looking `RETELL_API_KEY` is rejected too.
 
