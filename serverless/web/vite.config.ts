@@ -1,13 +1,15 @@
 import { defineConfig } from 'vite';
 
 /**
- * The demo page. Built into ../public, which Vercel serves as static files
- * next to the /api functions, so the page and the API share one origin.
+ * The demo page. Built into ../public/demo and served at /demo, next to the
+ * landing page (at /, see scripts/build-landing.mjs) and the /api functions,
+ * so everything shares one origin.
  */
 export default defineConfig({
   root: import.meta.dirname,
+  base: '/demo/',
   build: {
-    outDir: '../public',
+    outDir: '../public/demo',
     emptyOutDir: true,
     target: 'es2022',
     // The Retell client bundles its WebRTC stack; it is loaded lazily.

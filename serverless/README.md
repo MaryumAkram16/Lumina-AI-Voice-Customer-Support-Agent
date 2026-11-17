@@ -52,7 +52,7 @@ lib/
   schema.ts      zod schemas for what Retell sends.
   config.ts      Environment variables and the fail-fast check.
   data/          OrderRepository interface, demo adapter, Google Sheets adapter.
-web/       The demo page (Vite + TypeScript). Built into public/, which Vercel serves.
+web/       The demo page (Vite + TypeScript). Built into public/demo/, served at /demo/.
 tests/     Unit, contract, security and integration tests (vitest).
 scripts/   smoke.ts (checks a live deployment), dev-server.ts (local server).
 ```
@@ -125,7 +125,15 @@ One JSON object. Every response has `success`, `message` (a short sentence the a
 
 ## Demo page
 
-`web/` is a small page that lets a visitor talk to the agent in the browser. It is built with Vite into `public/` during `npm run build`, and Vercel serves it from the same deployment as the API, so there is one URL for everything.
+`web/` is a small page that lets a visitor talk to the agent in the browser. `npm run build` puts everything into `public/`, so one Vercel deployment serves one URL:
+
+| Path     | What                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------ |
+| `/`      | The landing page from [`../landing-page`](../landing-page), built by `scripts/build-landing.mjs` |
+| `/demo/` | This call page (`web/`)                                                                          |
+| `/api/*` | The serverless functions                                                                         |
+
+The landing page shows a **Talk to Lumina** button linking to `/demo/` only in this combined build; its GitHub Pages build is unchanged.
 
 How a call starts:
 
@@ -237,17 +245,17 @@ With the Vercel CLI (needs a Vercel login):
 npm run dev
 ```
 
-Without it, build the page once and use the bundled Node server on port 3000:
+Without it, build the pages once (landing page and demo page; needs internet for the landing page's pnpm install) and use the bundled Node server on port 3000:
 
 ```bash
-npm run build:web
+npm run build
 ```
 
 ```bash
 npm run dev:local
 ```
 
-Open http://localhost:3000 for the demo page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
+Open http://localhost:3000 for the landing page and http://localhost:3000/demo/ for the call page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
 
 Then, in another terminal, send signed sample requests:
 
@@ -291,7 +299,9 @@ Then deploy with one command:
 npm run deploy
 ```
 
-If you import the repository in the Vercel dashboard instead, set **Root Directory** to `serverless`.
+`npm run deploy` runs from the repository root, because the build also needs `landing-page/`.
+
+If you import the repository in the Vercel dashboard instead (recommended), set **Root Directory** to `serverless`, leave **Framework Preset** on **Other**, and keep **Include files outside the root directory in the Build Step** switched on (the default), so the build can reach `landing-page/`.
 
 Verify the deployment (reads `RETELL_API_KEY` from the environment or `.env`):
 
