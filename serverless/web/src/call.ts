@@ -18,6 +18,8 @@ export interface CallHandlers {
  */
 /** Set from each create-web-call response: what the page needs to follow the transcript. */
 let lastCall: { callId: string; token: string } | null = null;
+/** The demo code for the next call, sent to /api/create-web-call. */
+let passcode = '';
 
 const serverSideFetch: typeof fetch = async (input) => {
   const url = input instanceof Request ? input.url : String(input);
@@ -25,7 +27,7 @@ const serverSideFetch: typeof fetch = async (input) => {
     const response = await fetch('/api/create-web-call', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: '{}',
+      body: JSON.stringify(passcode ? { passcode } : {}),
     });
     if (response.ok) {
       const body = (await response
@@ -81,7 +83,8 @@ function followTranscript(
 }
 
 /** Starts a call. Must run from a click, because the microphone prompt happens here. */
-export function startCall(handlers: CallHandlers): ActiveCall {
+export function startCall(handlers: CallHandlers, code = ''): ActiveCall {
+  passcode = code;
   // The client reports a fatal failure as an `error` followed, in the same
   // tick, by `end`. An `error` with no `end` behind it is only a warning.
   let fatal: Error | undefined;

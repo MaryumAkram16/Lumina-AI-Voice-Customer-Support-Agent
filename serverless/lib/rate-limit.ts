@@ -33,6 +33,16 @@ export class RateLimiter {
     };
   }
 
+  /** Whether one more hit would be allowed, without counting it. */
+  peek(key: string, limit: number, now: number = Date.now()): RateDecision {
+    const entry = this.hits.get(key);
+    if (!entry || entry.resetAt <= now) return { allowed: true, retryAfterSeconds: 0 };
+    return {
+      allowed: entry.count < limit,
+      retryAfterSeconds: Math.max(1, Math.ceil((entry.resetAt - now) / 1000)),
+    };
+  }
+
   private prune(now: number): void {
     for (const [key, entry] of this.hits) {
       if (entry.resetAt <= now) this.hits.delete(key);

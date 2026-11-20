@@ -23,6 +23,12 @@ function button(id: string): HTMLButtonElement {
   return node;
 }
 
+function input(id: string): HTMLInputElement {
+  const node = el(id);
+  if (!(node instanceof HTMLInputElement)) throw new Error(`#${id} is not an input`);
+  return node;
+}
+
 const consoleEl = el('console');
 const orb = el('orb');
 const statusEl = el('status');
@@ -36,6 +42,37 @@ const backendText = el('backend-text');
 const heroStartBtn = button('hero-start');
 const linesEl = el('lines');
 const transcriptEmpty = el('transcript-empty');
+const passcodeRow = el('passcode-row');
+const passcodeInput = input('passcode');
+
+const CODE_KEY = 'lumina-demo-code';
+let passcodeRequired = false;
+
+/** A code in the shared link (?code=...) fills the field, then leaves the address bar. */
+function takeCodeFromLink(): void {
+  const url = new URL(window.location.href);
+  const code = url.searchParams.get('code')?.trim();
+  if (code) {
+    passcodeInput.value = code;
+    url.searchParams.delete('code');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } else {
+    try {
+      passcodeInput.value = window.sessionStorage.getItem(CODE_KEY) ?? '';
+    } catch {
+      // Storage can be blocked; the visitor just types the code again.
+    }
+  }
+}
+
+function rememberCode(code: string): void {
+  try {
+    if (code) window.sessionStorage.setItem(CODE_KEY, code);
+    else window.sessionStorage.removeItem(CODE_KEY);
+  } catch {
+    // Not important if storage is blocked.
+  }
+}
 
 // The call library is large, so it loads in the background after the page
 // paints. By the time someone presses start it is normally already here.
@@ -100,38 +137,57 @@ function setMuted(next: boolean): void {
 
 startBtn.addEventListener('click', () => {
   if (call || starting) return;
+  const code = passcodeInput.value.trim();
+  if (passcodeRequired && !code) {
+    detailEl.textContent = 'Enter your demo code first.';
+    passcodeInput.focus();
+    return;
+  }
+  rememberCode(code);
   starting = true;
   render('connecting');
   renderTranscript([]);
   timerEl.textContent = '00:00';
   callModule
     .then(({ startCall }) => {
-      call = startCall({
-        onLive() {
-          render('live');
-          setMuted(false);
-          startedAt = Date.now();
-          ticker = window.setInterval(() => {
-            timerEl.textContent = formatDuration((Date.now() - startedAt) / 1000);
-          }, 500);
+      call = startCall(
+        {
+          onLive() {
+            render('live');
+            setMuted(false);
+            startedAt = Date.now();
+            ticker = window.setInterval(() => {
+              timerEl.textContent = formatDuration((Date.now() - startedAt) / 1000);
+            }, 500);
+          },
+          onEnded(reason) {
+            call = null;
+            stopTimer();
+            render('ended', describeEnd(reason));
+          },
+          onError(error) {
+            call = null;
+            stopTimer();
+            if (
+              typeof error === 'object' &&
+              error !== null &&
+              'status' in error &&
+              error.status === 401
+            ) {
+              rememberCode('');
+              passcodeInput.select();
+            }
+            render('error', describeError(error));
+          },
+          onTranscript(lines) {
+            renderTranscript(lines);
+          },
+          onLevel(samples) {
+            orb.style.setProperty('--level', levelOf(samples).toFixed(3));
+          },
         },
-        onEnded(reason) {
-          call = null;
-          stopTimer();
-          render('ended', describeEnd(reason));
-        },
-        onError(error) {
-          call = null;
-          stopTimer();
-          render('error', describeError(error));
-        },
-        onTranscript(lines) {
-          renderTranscript(lines);
-        },
-        onLevel(samples) {
-          orb.style.setProperty('--level', levelOf(samples).toFixed(3));
-        },
-      });
+        code,
+      );
     })
     .catch((error: unknown) => {
       render('error', describeError(error));
@@ -210,6 +266,7 @@ interface Health {
   status?: string;
   data_source?: string;
   web_call?: boolean;
+  passcode?: boolean;
 }
 
 async function checkBackend(): Promise<void> {
@@ -220,6 +277,8 @@ async function checkBackend(): Promise<void> {
 
     backendEl.dataset.state = 'ok';
     backendText.textContent = 'Lumina is online';
+    passcodeRequired = health.passcode === true;
+    passcodeRow.hidden = !passcodeRequired;
     if (health.web_call !== true) render('unavailable');
   } catch {
     backendEl.dataset.state = 'down';
@@ -228,6 +287,7 @@ async function checkBackend(): Promise<void> {
   }
 }
 
+takeCodeFromLink();
 renderPrompts();
 render('idle');
 void checkBackend();

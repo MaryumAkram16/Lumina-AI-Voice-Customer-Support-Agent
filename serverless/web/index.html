@@ -88,6 +88,20 @@
             <p class="detail" id="detail">Press start, then just speak.</p>
           </div>
 
+          <div class="passcode" id="passcode-row" hidden>
+            <label for="passcode">Demo code</label>
+            <input
+              id="passcode"
+              type="text"
+              inputmode="text"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="64"
+              placeholder="Enter the code you were given"
+            />
+          </div>
+
           <div class="controls">
             <button class="btn primary" id="start" type="button">Start call</button>
             <button class="btn ghost" id="mute" type="button" aria-pressed="false" hidden>

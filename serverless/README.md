@@ -117,33 +117,34 @@ Delivery dates are read as `DD-MM-YY` (the n8n sheet format) or `YYYY-MM-DD`.
 
 ## Environment variables
 
-| Variable                        | Required          | Default  | Purpose                                                                                  |
-| ------------------------------- | ----------------- | -------- | ---------------------------------------------------------------------------------------- |
-| `RETELL_API_KEY`                | Yes               |          | Verifies the `X-Retell-Signature` header. Use the Retell API key with the webhook badge. |
-| `RETELL_AGENT_ID`               | For the demo page |          | The agent the page's "Start call" button rings. Empty switches browser calls off.        |
-| `WEB_CALL_MAX_PER_IP`           | No                | `5`      | Browser calls one visitor may start per window.                                          |
-| `WEB_CALL_MAX_GLOBAL`           | No                | `40`     | Browser calls all visitors together may start per window.                                |
-| `WEB_CALL_RATE_LIMIT_WINDOW_MS` | No                | `600000` | Window for the two limits above (10 minutes).                                            |
-| `DATA_SOURCE`                   | No                | `demo`   | `demo`, `sheets` or `supabase`.                                                          |
-| `SUPABASE_URL`                  | If `supabase`     |          | Project URL, e.g. `https://abcd1234.supabase.co`.                                        |
-| `SUPABASE_SERVICE_ROLE_KEY`     | If `supabase`     |          | Server-only `service_role` or `sb_secret_...` key. Never the anon/publishable key.       |
-| `SUPABASE_TABLE`                | No                | `orders` | Table created by `supabase/schema.sql`.                                                  |
-| `SUPABASE_TIMEOUT_MS`           | No                | `2000`   | Timeout per Supabase attempt.                                                            |
-| `SUPABASE_MAX_RETRIES`          | No                | `1`      | Retries after the first attempt, with exponential backoff.                               |
-| `GOOGLE_SERVICE_ACCOUNT_JSON`   | If `sheets`       |          | Service-account key file as one line of JSON, or base64.                                 |
-| `GOOGLE_SHEET_ID`               | If `sheets`       |          | Spreadsheet ID from the sheet URL.                                                       |
-| `GOOGLE_SHEET_TAB`              | No                | `Orders` | Tab holding the orders.                                                                  |
-| `ALLOWED_ORIGINS`               | No                | empty    | Exact browser origins allowed by CORS, comma-separated. Empty means none.                |
-| `RATE_LIMIT_WINDOW_MS`          | No                | `60000`  | Rate-limit window.                                                                       |
-| `RATE_LIMIT_MAX_PER_IP`         | No                | `120`    | Requests per window per IP.                                                              |
-| `RATE_LIMIT_MAX_PER_CALL`       | No                | `20`     | Requests per window per Retell `call_id` (full payload only).                            |
-| `MAX_BODY_BYTES`                | No                | `102400` | Largest accepted body.                                                                   |
-| `SHEETS_TIMEOUT_MS`             | No                | `1500`   | Timeout per Google Sheets attempt.                                                       |
-| `SHEETS_MAX_RETRIES`            | No                | `1`      | Retries after the first attempt, with exponential backoff.                               |
-| `SHEETS_BACKOFF_MS`             | No                | `100`    | First backoff delay.                                                                     |
-| `SHEETS_CACHE_TTL_MS`           | No                | `15000`  | How long one read of the sheet is reused. `0` disables.                                  |
-| `BUSINESS_TIMEZONE`             | No                | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                     |
-| `CURRENCY_LABEL`                | No                | `PKR`    | Spoken after refund amounts.                                                             |
+| Variable                        | Required          | Default  | Purpose                                                                                                          |
+| ------------------------------- | ----------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `RETELL_API_KEY`                | Yes               |          | Verifies the `X-Retell-Signature` header. Use the Retell API key with the webhook badge.                         |
+| `RETELL_AGENT_ID`               | For the demo page |          | The agent the page's "Start call" button rings. Empty switches browser calls off.                                |
+| `WEB_CALL_MAX_PER_IP`           | No                | `5`      | Browser calls one visitor may start per window.                                                                  |
+| `WEB_CALL_MAX_GLOBAL`           | No                | `40`     | Browser calls all visitors together may start per window.                                                        |
+| `WEB_CALL_RATE_LIMIT_WINDOW_MS` | No                | `600000` | Window for the two limits above (10 minutes).                                                                    |
+| `WEB_CALL_PASSCODE`             | No                | empty    | Demo code a visitor must enter to start a call. Share links as `https://…/?code=YOUR-CODE`. Empty means no code. |
+| `DATA_SOURCE`                   | No                | `demo`   | `demo`, `sheets` or `supabase`.                                                                                  |
+| `SUPABASE_URL`                  | If `supabase`     |          | Project URL, e.g. `https://abcd1234.supabase.co`.                                                                |
+| `SUPABASE_SERVICE_ROLE_KEY`     | If `supabase`     |          | Server-only `service_role` or `sb_secret_...` key. Never the anon/publishable key.                               |
+| `SUPABASE_TABLE`                | No                | `orders` | Table created by `supabase/schema.sql`.                                                                          |
+| `SUPABASE_TIMEOUT_MS`           | No                | `2000`   | Timeout per Supabase attempt.                                                                                    |
+| `SUPABASE_MAX_RETRIES`          | No                | `1`      | Retries after the first attempt, with exponential backoff.                                                       |
+| `GOOGLE_SERVICE_ACCOUNT_JSON`   | If `sheets`       |          | Service-account key file as one line of JSON, or base64.                                                         |
+| `GOOGLE_SHEET_ID`               | If `sheets`       |          | Spreadsheet ID from the sheet URL.                                                                               |
+| `GOOGLE_SHEET_TAB`              | No                | `Orders` | Tab holding the orders.                                                                                          |
+| `ALLOWED_ORIGINS`               | No                | empty    | Exact browser origins allowed by CORS, comma-separated. Empty means none.                                        |
+| `RATE_LIMIT_WINDOW_MS`          | No                | `60000`  | Rate-limit window.                                                                                               |
+| `RATE_LIMIT_MAX_PER_IP`         | No                | `120`    | Requests per window per IP.                                                                                      |
+| `RATE_LIMIT_MAX_PER_CALL`       | No                | `20`     | Requests per window per Retell `call_id` (full payload only).                                                    |
+| `MAX_BODY_BYTES`                | No                | `102400` | Largest accepted body.                                                                                           |
+| `SHEETS_TIMEOUT_MS`             | No                | `1500`   | Timeout per Google Sheets attempt.                                                                               |
+| `SHEETS_MAX_RETRIES`            | No                | `1`      | Retries after the first attempt, with exponential backoff.                                                       |
+| `SHEETS_BACKOFF_MS`             | No                | `100`    | First backoff delay.                                                                                             |
+| `SHEETS_CACHE_TTL_MS`           | No                | `15000`  | How long one read of the sheet is reused. `0` disables.                                                          |
+| `BUSINESS_TIMEZONE`             | No                | `UTC`    | Decides what "today" is, for example `Asia/Karachi`.                                                             |
+| `CURRENCY_LABEL`                | No                | `PKR`    | Spoken after refund amounts.                                                                                     |
 
 ### Using Supabase as the database
 

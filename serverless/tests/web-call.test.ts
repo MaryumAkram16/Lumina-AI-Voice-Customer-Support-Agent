@@ -109,7 +109,7 @@ describe('POST /api/create-web-call', () => {
       string,
       unknown
     >;
-    expect(health).toMatchObject({ status: 'ok', web_call: true });
+    expect(health).toMatchObject({ status: 'ok', web_call: true, passcode: false });
     expect(JSON.stringify(health)).not.toContain(AGENT);
   });
 
@@ -178,5 +178,49 @@ describe('POST /api/create-web-call', () => {
 
   it('rejects a malformed agent ID at startup', () => {
     expect(() => makeApp({ env: { RETELL_AGENT_ID: 'not valid!' } })).toThrow(/RETELL_AGENT_ID/);
+  });
+});
+
+describe('demo code (WEB_CALL_PASSCODE)', () => {
+  const CODE = 'demo-code-test-only';
+
+  it('starts a call only with the right code, and says so in /api/health', async () => {
+    const { call, agents, app } = setup({ WEB_CALL_PASSCODE: CODE });
+    const health = (await app.health(new Request(`${ORIGIN}/api/health`)).json()) as Record<
+      string,
+      unknown
+    >;
+    expect(health.passcode).toBe(true);
+    expect(JSON.stringify(health)).not.toContain(CODE);
+
+    const missing = await call();
+    expect(missing.status).toBe(401);
+    expect(missing.body.error).toBe('passcode_required');
+    expect((await call({ body: JSON.stringify({ passcode: 'wrong-code' }) })).status).toBe(401);
+    expect((await call({ body: 'not json' })).status).toBe(401);
+    expect(agents).toEqual([]);
+
+    const ok = await call({ body: JSON.stringify({ passcode: ` ${CODE} ` }) });
+    expect(ok.status).toBe(200);
+    expect(ok.text).not.toContain(CODE);
+    expect(agents).toEqual([AGENT]);
+  });
+
+  it('slows down guessing without using up real call starts', async () => {
+    const { call } = setup({ WEB_CALL_PASSCODE: CODE, WEB_CALL_MAX_PER_IP: '1' });
+    for (let i = 0; i < 10; i++) {
+      expect((await call({ body: JSON.stringify({ passcode: `guess-${i}` }) })).status).toBe(401);
+    }
+    // The eleventh guess is refused before the code is even compared.
+    const blocked = await call({ body: JSON.stringify({ passcode: CODE }) });
+    expect(blocked.status).toBe(429);
+    // Another visitor with the right code still gets their one call.
+    const other = await call({ ip: '203.0.113.99', body: JSON.stringify({ passcode: CODE }) });
+    expect(other.status).toBe(200);
+  });
+
+  it('rejects a code with spaces or of the wrong length at startup', () => {
+    expect(() => makeApp({ env: { WEB_CALL_PASSCODE: 'has space' } })).toThrow(/WEB_CALL_PASSCODE/);
+    expect(() => makeApp({ env: { WEB_CALL_PASSCODE: 'abc' } })).toThrow(/WEB_CALL_PASSCODE/);
   });
 });
