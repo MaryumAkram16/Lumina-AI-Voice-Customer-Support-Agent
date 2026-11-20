@@ -11,4 +11,5 @@ regexes = [
   '''retell-key-0123456789abcdef''',
   '''eyJhbGciOiJIUzI1NiJ9\.service\.role''',
   '''sb_secret_abc123''',
+  '''sb_publishable_123''',
 ]
