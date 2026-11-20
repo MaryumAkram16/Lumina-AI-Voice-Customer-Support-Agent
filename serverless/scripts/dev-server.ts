@@ -10,6 +10,7 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import * as callTranscript from '../api/call-transcript.js';
 import * as cancelOrder from '../api/cancel-order.js';
 import * as createWebCall from '../api/create-web-call.js';
 import * as health from '../api/health.js';
@@ -28,6 +29,7 @@ const routes: Record<string, Handler> = {
   '/api/refund-eligibility': refundEligibility.POST,
   '/api/order': order.POST,
   '/api/create-web-call': createWebCall.POST,
+  '/api/call-transcript': callTranscript.GET,
 };
 
 const port = Number(process.env.PORT ?? 3000);
@@ -83,7 +85,19 @@ const server = createServer((req, res) => {
       }),
     );
     res.writeHead(response.status, Object.fromEntries(response.headers));
-    res.end(Buffer.from(await response.arrayBuffer()));
+    // Streamed chunk by chunk, so server-sent events (the live transcript) arrive as they happen.
+    if (response.body) {
+      const reader = response.body.getReader();
+      req.on('close', () => {
+        void reader.cancel();
+      });
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        res.write(value);
+      }
+    }
+    res.end();
   })().catch(() => {
     res.writeHead(500).end();
   });
