@@ -6,6 +6,7 @@ import {
   formatDuration,
   levelOf,
   PROMPTS,
+  toTranscript,
   viewFor,
   type CallState,
 } from '../web/src/state.js';
@@ -97,5 +98,33 @@ describe('demo page view logic', () => {
         if (prompt.email) expect(order?.email).toBe(prompt.email);
       }
     }
+  });
+});
+
+describe('live transcript', () => {
+  it('keeps what the caller and Lumina said, merging turns by speaker', () => {
+    const lines = toTranscript([
+      { role: 'agent', content: 'Hi, this is Lumina.' },
+      { role: 'agent', content: ' How can I help? ' },
+      { role: 'user', content: 'Where is my order?' },
+      { role: 'user', content: 'mm-hmm', metadata: { is_backchannel: true } },
+      { role: 'tool_call_invocation', name: 'track_order', arguments: '{}' },
+      { role: 'tool_call_result', content: '{"secret":"x"}' },
+      { role: 'node_transition', new_node_name: 'tracking' },
+      { role: 'agent', content: '' },
+      { role: 'agent', content: 'It shipped with UPS.' },
+      null,
+      'junk',
+    ]);
+    expect(lines).toEqual([
+      { speaker: 'lumina', text: 'Hi, this is Lumina. How can I help?' },
+      { speaker: 'you', text: 'Where is my order?' },
+      { speaker: 'lumina', text: 'It shipped with UPS.' },
+    ]);
+  });
+
+  it('returns nothing for an empty or unknown transcript', () => {
+    expect(toTranscript([])).toEqual([]);
+    expect(toTranscript([{ role: 'sms', content: 'hello' }])).toEqual([]);
   });
 });

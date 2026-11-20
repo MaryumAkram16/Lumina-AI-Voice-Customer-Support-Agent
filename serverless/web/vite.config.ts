@@ -1,16 +1,17 @@
 import { defineConfig } from 'vite';
 
 /**
- * The demo page. Built into ../public/demo and served at /demo, next to the
- * landing page (at /, see scripts/build-landing.mjs) and the /api functions,
- * so everything shares one origin.
+ * The "Talk to Lumina" page. Built into ../public and served at /, next to the
+ * kit page (at /kit/, see scripts/build-landing.ts) and the /api functions,
+ * so everything shares one origin. emptyOutDir is off so the kit page that
+ * build-landing.ts put in public/kit/ survives.
  */
 export default defineConfig({
   root: import.meta.dirname,
-  base: '/demo/',
+  base: '/',
   build: {
-    outDir: '../public/demo',
-    emptyOutDir: true,
+    outDir: '../public',
+    emptyOutDir: false,
     target: 'es2022',
     // The Retell client bundles its WebRTC stack; it is loaded lazily.
     chunkSizeWarningLimit: 700,
