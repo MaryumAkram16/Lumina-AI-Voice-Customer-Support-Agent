@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Talk to Lumina, an AI voice agent for e-commerce support. Track, cancel, return or refund a demo order by voice."
+      content="Want to check your order? Talk to Lumina. Track, cancel, return or refund an order by voice, right in your browser."
     />
     <meta name="theme-color" content="#062a32" />
-    <title>Lumina · Live voice demo</title>
+    <title>Lumina · Order help by voice</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,29 +31,40 @@
           </svg>
           <span>LUMINA</span>
         </a>
-        <p class="backend" id="backend" data-state="checking">
-          <span class="dot" aria-hidden="true"></span>
-          <span id="backend-text">Checking backend</span>
-        </p>
+        <nav class="nav" aria-label="Sections">
+          <a href="#help">What I can do</a>
+          <a href="#how">How it works</a>
+          <a href="#try">Sample orders</a>
+        </nav>
       </header>
 
       <main class="hero page">
         <section class="intro">
-          <p class="eyebrow">Live voice demo</p>
-          <h1>Talk to Lumina.</h1>
+          <p class="eyebrow">Order help, any time</p>
+          <h1>Want to check your order? <em>Talk to Lumina.</em></h1>
           <p class="lede">
-            Lumina is an AI voice agent for e-commerce support. Start a call and ask it to track,
-            cancel, return or refund one of the demo orders below.
+            No hold music, no forms, no waiting for an email back. Press the button, say your order
+            number, and Lumina tracks, cancels, returns or refunds it while you're on the line.
           </p>
-          <ul class="facts">
-            <li>Runs in your browser. It will ask to use your microphone.</li>
-            <li>Every order here is made up. No real customer data is involved.</li>
+          <div class="hero-actions">
+            <button class="btn primary hero-cta" id="hero-start" type="button">
+              Start talking
+            </button>
+            <a class="text-link" href="#try">See what to ask</a>
+          </div>
+          <ul class="perks">
+            <li>No app, no sign-up</li>
+            <li>Works in your browser</li>
+            <li>Answers in seconds</li>
           </ul>
         </section>
 
-        <section class="console" id="console" data-state="idle" aria-labelledby="console-title">
+        <section class="console" id="console" data-state="idle" aria-labelledby="status">
           <div class="console-top">
-            <span id="console-title">Voice line</span>
+            <p class="backend" id="backend" data-state="checking">
+              <span class="dot" aria-hidden="true"></span>
+              <span id="backend-text">Checking line</span>
+            </p>
             <span id="timer" aria-hidden="true">00:00</span>
           </div>
 
@@ -61,7 +72,17 @@
             <div class="orb" id="orb" aria-hidden="true">
               <span class="ring ring-a"></span>
               <span class="ring ring-b"></span>
-              <span class="core"></span>
+              <span class="core">
+                <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
+                  <path
+                    d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0M12 17v3"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                  />
+                </svg>
+              </span>
             </div>
             <p class="status" id="status" role="status" aria-live="polite">Ready when you are</p>
             <p class="detail" id="detail">Press start, then just speak.</p>
@@ -74,17 +95,76 @@
             </button>
             <button class="btn danger" id="end" type="button" hidden>End call</button>
           </div>
+
+          <div class="transcript" aria-labelledby="transcript-title">
+            <p class="transcript-title" id="transcript-title">Live transcript</p>
+            <ol class="lines" id="lines" aria-live="polite"></ol>
+            <p class="transcript-empty" id="transcript-empty">
+              What you and Lumina say will appear here as you talk.
+            </p>
+          </div>
         </section>
       </main>
     </div>
 
-    <section class="try page" aria-labelledby="try-title">
+    <section class="help page" id="help" aria-labelledby="help-title">
+      <p class="eyebrow dark">What I can do</p>
+      <h2 id="help-title">One call covers the usual order questions</h2>
+      <ul class="tiles">
+        <li class="tile">
+          <span class="tile-icon" aria-hidden="true">01</span>
+          <h3>Track an order</h3>
+          <p>Where it is, which courier has it, and when it should arrive.</p>
+        </li>
+        <li class="tile">
+          <span class="tile-icon" aria-hidden="true">02</span>
+          <h3>Cancel an order</h3>
+          <p>Stopped straight away if it hasn't shipped yet. Lumina tells you if it's too late.</p>
+        </li>
+        <li class="tile">
+          <span class="tile-icon" aria-hidden="true">03</span>
+          <h3>Start a return</h3>
+          <p>Checks the return window and the item's condition, then starts it for you.</p>
+        </li>
+        <li class="tile">
+          <span class="tile-icon" aria-hidden="true">04</span>
+          <h3>Ask for a refund</h3>
+          <p>Confirms you're eligible and starts the refund for the amount you paid.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section class="how" id="how" aria-labelledby="how-title">
+      <div class="page">
+        <p class="eyebrow">How it works</p>
+        <h2 id="how-title">Three steps, about a minute</h2>
+        <ol class="steps">
+          <li>
+            <span class="step-n">1</span>
+            <h3>Press start</h3>
+            <p>Allow the microphone when your browser asks. Nothing to install.</p>
+          </li>
+          <li>
+            <span class="step-n">2</span>
+            <h3>Say your order number</h3>
+            <p>For changes to an order, Lumina also asks for the email you ordered with.</p>
+          </li>
+          <li>
+            <span class="step-n">3</span>
+            <h3>Get your answer</h3>
+            <p>Lumina checks the order and replies out loud. You can read along below the mic.</p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="try page" id="try" aria-labelledby="try-title">
       <div class="try-head">
-        <p class="eyebrow dark">Things to try</p>
-        <h2 id="try-title">Say one of these once the call is live</h2>
+        <p class="eyebrow dark">Try it now</p>
+        <h2 id="try-title">No order of your own? Use one of these</h2>
         <p>
-          For anything except tracking, Lumina asks for the email on the order. Say it the way you
-          would on the phone, for example “jordan at example dot test”.
+          These are sample orders made for trying Lumina. Say the email the way you would on the
+          phone, for example “jordan at example dot test”.
         </p>
       </div>
       <ol class="cards" id="cards"></ol>
@@ -92,10 +172,10 @@
 
     <footer class="foot page">
       <p>
-        Calls are handled by Retell AI and may be recorded. Changes you make to a demo order are
-        temporary and reset on their own.
+        Calls are handled by Retell AI and may be recorded. Changes to sample orders are temporary.
       </p>
-      <p>
+      <p class="foot-links">
+        <a href="/kit/">Building your own? Get the Lumina kit</a>
         <a href="https://github.com/MaryumAkram16/Lumina-AI-Voice-Customer-Support-Agent">
           Source on GitHub
         </a>

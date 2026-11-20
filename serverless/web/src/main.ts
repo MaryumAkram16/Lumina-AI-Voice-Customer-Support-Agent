@@ -8,6 +8,7 @@ import {
   PROMPTS,
   viewFor,
   type CallState,
+  type TranscriptLine,
 } from './state.js';
 
 function el(id: string): HTMLElement {
@@ -32,6 +33,9 @@ const muteBtn = button('mute');
 const endBtn = button('end');
 const backendEl = el('backend');
 const backendText = el('backend-text');
+const heroStartBtn = button('hero-start');
+const linesEl = el('lines');
+const transcriptEmpty = el('transcript-empty');
 
 // The call library is large, so it loads in the background after the page
 // paints. By the time someone presses start it is normally already here.
@@ -57,6 +61,26 @@ function render(state: CallState, detail = ''): void {
   if (state !== 'live') orb.style.setProperty('--level', '0');
 }
 
+/** Redraws the transcript, staying pinned to the newest line unless the visitor scrolled up. */
+function renderTranscript(lines: readonly TranscriptLine[]): void {
+  const pinned = linesEl.scrollHeight - linesEl.scrollTop - linesEl.clientHeight < 40;
+  linesEl.replaceChildren(
+    ...lines.map((line) => {
+      const item = document.createElement('li');
+      item.className = `line line-${line.speaker}`;
+      const who = document.createElement('span');
+      who.className = 'line-who';
+      who.textContent = line.speaker === 'lumina' ? 'Lumina' : 'You';
+      const text = document.createElement('p');
+      text.textContent = line.text;
+      item.append(who, text);
+      return item;
+    }),
+  );
+  transcriptEmpty.hidden = lines.length > 0;
+  if (pinned) linesEl.scrollTop = linesEl.scrollHeight;
+}
+
 function stopTimer(): void {
   window.clearInterval(ticker);
   ticker = undefined;
@@ -78,6 +102,7 @@ startBtn.addEventListener('click', () => {
   if (call || starting) return;
   starting = true;
   render('connecting');
+  renderTranscript([]);
   timerEl.textContent = '00:00';
   callModule
     .then(({ startCall }) => {
@@ -100,6 +125,9 @@ startBtn.addEventListener('click', () => {
           stopTimer();
           render('error', describeError(error));
         },
+        onTranscript(lines) {
+          renderTranscript(lines);
+        },
         onLevel(samples) {
           orb.style.setProperty('--level', levelOf(samples).toFixed(3));
         },
@@ -111,6 +139,12 @@ startBtn.addEventListener('click', () => {
     .finally(() => {
       starting = false;
     });
+});
+
+// The hero button starts the same call and brings the mic panel into view.
+heroStartBtn.addEventListener('click', () => {
+  consoleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (!startBtn.hidden && !startBtn.disabled) startBtn.click();
 });
 
 muteBtn.addEventListener('click', () => {
@@ -185,13 +219,12 @@ async function checkBackend(): Promise<void> {
     if (!response.ok || health.status !== 'ok') throw new Error('unhealthy');
 
     backendEl.dataset.state = 'ok';
-    backendText.textContent =
-      health.data_source === 'demo' ? 'Backend online · demo data' : 'Backend online';
+    backendText.textContent = 'Lumina is online';
     if (health.web_call !== true) render('unavailable');
   } catch {
     backendEl.dataset.state = 'down';
-    backendText.textContent = 'Backend unreachable';
-    render('unavailable', 'The backend is not answering right now. Please try again later.');
+    backendText.textContent = 'Line unavailable';
+    render('unavailable', "Lumina isn't answering right now. Please try again in a little while.");
   }
 }
 

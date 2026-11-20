@@ -169,7 +169,7 @@ export default function Home() {
     scrollToId(id);
   };
 
-  // Set by the combined Vercel build (serverless/scripts/build-landing.mjs).
+  // Set by the combined Vercel build (serverless/scripts/build-landing.ts).
   // Empty on GitHub Pages, where there is no backend to call.
   const liveCallUrl = import.meta.env.VITE_LIVE_DEMO_URL as string | undefined;
 

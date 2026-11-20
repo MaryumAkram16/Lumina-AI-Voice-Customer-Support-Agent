@@ -1,10 +1,13 @@
 import { RetellClient, type WebCallSession } from 'retell-client-js-sdk';
+import { toTranscript, type TranscriptLine } from './state.js';
 
 export interface CallHandlers {
   onLive(): void;
   onEnded(reason: string | undefined): void;
   onError(error: unknown): void;
   onLevel(samples: Float32Array): void;
+  /** The whole conversation so far, each time it changes. */
+  onTranscript(lines: TranscriptLine[]): void;
 }
 
 /**
@@ -40,6 +43,7 @@ export function startCall(handlers: CallHandlers): ActiveCall {
   // The client reports a fatal failure as an `error` followed, in the same
   // tick, by `end`. An `error` with no `end` behind it is only a warning.
   let fatal: Error | undefined;
+  let sawTranscript = false;
 
   const session: WebCallSession = client.createWebCall({
     // Ignored by the server, which uses the agent it is configured with.
@@ -48,6 +52,15 @@ export function startCall(handlers: CallHandlers): ActiveCall {
     hooks: {
       onStatus: (status) => {
         if (status === 'live') handlers.onLive();
+      },
+      // Both hooks carry the full transcript so far. Newer Retell clients send
+      // `onTranscript`; `onUpdate` is the older event and the fallback.
+      onTranscript: (transcript) => {
+        sawTranscript = true;
+        handlers.onTranscript(toTranscript(transcript));
+      },
+      onUpdate: (event) => {
+        if (!sawTranscript) handlers.onTranscript(toTranscript(event.transcript));
       },
       onAudio: (samples) => {
         handlers.onLevel(samples);

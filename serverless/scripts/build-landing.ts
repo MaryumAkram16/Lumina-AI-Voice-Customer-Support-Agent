@@ -1,8 +1,8 @@
 /**
- * Builds the landing page (../landing-page) and copies it into public/, so one
+ * Builds the kit page (../landing-page) and copies it into public/kit/, so one
  * Vercel deployment serves:
- *   /       landing page
- *   /demo/  browser call page (vite build --config web/vite.config.ts, run after this)
+ *   /       "Talk to Lumina" page (vite build --config web/vite.config.ts, run after this)
+ *   /kit/   kit page for developers and buyers
  *   /api/*  serverless functions
  *
  * The landing page uses pnpm; the pinned version from its package.json is run
@@ -21,22 +21,21 @@ if (!existsSync(landing)) {
   );
 }
 
-const pkg = JSON.parse(readFileSync(`${landing}package.json`, 'utf8'));
-const pnpm = `pnpm@${
-  String(pkg.packageManager ?? 'pnpm@10')
-    .split('@')[1]
-    .split('+')[0]
-}`;
+const pkg = JSON.parse(readFileSync(`${landing}package.json`, 'utf8')) as {
+  packageManager?: string;
+};
+// "pnpm@10.4.1+sha512..." -> "pnpm@10.4.1"
+const pnpm = (pkg.packageManager ?? 'pnpm@10').split('+')[0] ?? 'pnpm@10';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const run = (...args) =>
+const run = (...args: string[]) =>
   execFileSync(npx, ['--yes', pnpm, ...args], {
     cwd: landing,
     stdio: 'inherit',
     env: {
       ...process.env,
       NODE_ENV: 'production',
-      VITE_BASE_PATH: '/',
-      VITE_LIVE_DEMO_URL: '/demo/',
+      VITE_BASE_PATH: '/kit/',
+      VITE_LIVE_DEMO_URL: '/',
     },
   });
 
@@ -44,7 +43,7 @@ run('install', '--frozen-lockfile');
 run('build');
 
 rmSync(output, { recursive: true, force: true });
-cpSync(`${landing}dist/public/`, output, { recursive: true });
+cpSync(`${landing}dist/public/`, `${output}kit/`, { recursive: true });
 // Manus editor debug files are not needed in production.
-rmSync(`${output}__manus__`, { recursive: true, force: true });
-console.log('Landing page copied to public/');
+rmSync(`${output}kit/__manus__`, { recursive: true, force: true });
+console.log('Kit page copied to public/kit/');

@@ -33,8 +33,8 @@ This demo shows the *Lumina AI Voice Customer Support Agent* handling a live e-c
 
 > Placeholders: fill these in after deploying [`serverless/`](serverless/).
 
-- **Landing page:** `https://YOUR-PROJECT.vercel.app`
-- **Live demo page:** `https://YOUR-PROJECT.vercel.app/demo/` (press **Start call** and talk to Lumina in the browser)
+- **Talk to Lumina:** `https://YOUR-PROJECT.vercel.app` (press **Start call**, talk to Lumina in the browser and read the live transcript)
+- **Kit page:** `https://YOUR-PROJECT.vercel.app/kit/`
 - **Backend health check:** `https://YOUR-PROJECT.vercel.app/api/health`
 
 The hosted demo uses synthetic orders only. Phrases to try:

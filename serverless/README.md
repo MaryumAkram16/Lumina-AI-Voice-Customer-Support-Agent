@@ -52,88 +52,20 @@ lib/
   schema.ts      zod schemas for what Retell sends.
   config.ts      Environment variables and the fail-fast check.
   data/          OrderRepository interface, demo adapter, Google Sheets adapter.
-web/       The demo page (Vite + TypeScript). Built into public/demo/, served at /demo/.
+web/       The Talk to Lumina page (Vite + TypeScript). Built into public/, served at /.
 tests/     Unit, contract, security and integration tests (vitest).
 scripts/   smoke.ts (checks a live deployment), dev-server.ts (local server).
 ```
 
 ## Endpoints
 
-| Method | Path                      | Purpose                                                                        |
-| ------ | ------------------------- | ------------------------------------------------------------------------------ |
-| `GET`  | `/api/health`             | Liveness and which data source is active. Unsigned.                            |
-| `POST` | `/api/track-order`        | Order status, carrier and delivery date.                                       |
-| `POST` | `/api/cancel-order`       | Cancellation check; cancels when `cancellation_initiated` is `"yes"`.          |
-| `POST` | `/api/return-item`        | Return check; starts the return when `return_initiated` is `"yes"`.            |
-| `POST` | `/api/refund-eligibility` | Refund check; starts the refund when `refund_initiated` is `"yes"`.            |
-| `POST` | `/api/order`              | All of the above on one URL, routed by `intent`, like the n8n webhook.         |
-| `POST` | `/api/create-web-call`    | Called by the demo page only. Starts a browser call with the configured agent. |
-| `GET`  | `/`                       | The demo page.                                                                 |
+| Method | Path | What |
+| -------- | -------------------------------------------------------------------------------------- |
+| `/` | The "Talk to Lumina" page (`web/`): e-commerce order help by voice, with a live transcript under the mic |
+| `/kit/` | The kit page from [`../landing-page`](../landing-page), built by `scripts/build-landing.ts` |
+| `/api/*` | The serverless functions |
 
-Why both: the n8n workflow is one webhook that switches on `intent`, so `/api/order` is a drop-in replacement for that URL. The dedicated routes give each Retell function its own URL, which is easier to read in logs and cannot be misrouted by a badly worded `intent`. All six share the same pipeline and the same rules module.
-
-### Request
-
-The fields the Retell functions in `Lumina_AI_Voice_Customer_Support_Agent_Retell..json` send. Unknown fields are rejected.
-
-| Field                                                                | Used for                                                                |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `order_id`                                                           | Which order. "ord test 001" and "ORD-TEST-001" are the same order.      |
-| `intent`                                                             | Required on `/api/order`. Optional on the dedicated routes.             |
-| `email`, `phone_no` (or `Phone_no`)                                  | Customer verification.                                                  |
-| `cancellation_initiated`, `return_initiated`, `refund_initiated`     | `"yes"` performs the action; anything else only checks.                 |
-| `reason`, `item_condition`                                           | Saved with a cancellation or return.                                    |
-| `customer_name`, `user_message`, `date`, `refund_amount`, `event_id` | Accepted, never trusted. The refund amount always comes from the order. |
-
-Both Retell payload styles work: "args only" (the arguments at the top level, which is what the exported agent uses) and the full `{ name, call, args }` body.
-
-### Response
-
-One JSON object. Every response has `success`, `message` (a short sentence the agent can say), `outcome`, `intent` and `request_id`.
-
-```json
-{
-  "success": true,
-  "outcome": "success",
-  "intent": "track_order",
-  "message": "Hi Alex Example. Your order is currently shipped with UPS. It is expected on 31 December 2026. The latest update is: in transit.",
-  "status": "shipped",
-  "tracking_number": "1ZTEST00000000001",
-  "carrier": "UPS",
-  "delivery_date": "2026-12-31",
-  "request_id": "0b6f2f0e-…"
-}
-```
-
-| Route  | Extra fields                                                                              |
-| ------ | ----------------------------------------------------------------------------------------- |
-| track  | `status`, `tracking_number`, `carrier`, `delivery_date` (the README API reference fields) |
-| cancel | `cancelMessage`, `canCancel`, `orderFound`                                                |
-| return | `return message`, `returnMessage`, `canReturn`, `orderFound`, `daysSinceDelivery`         |
-| refund | `canRefund`, `refundAmount`, `orderFound`, `daysSinceDelivery`                            |
-
-`cancelMessage` and `return message` are the keys the n8n workflow returns and the Retell prompts read. They always equal `message`.
-
-| HTTP status           | When                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------- |
-| 200                   | Any business answer, including "not found" and "not eligible" (`success: false`), as n8n does. |
-| 400                   | Malformed JSON, unknown field, wrong type, value too long, unsupported intent.                 |
-| 401                   | Missing, invalid, tampered or stale Retell signature.                                          |
-| 403 / 405 / 413 / 415 | Origin not allowed / not POST / body too large / not JSON.                                     |
-| 429                   | Rate limit. Includes `Retry-After`.                                                            |
-| 500 / 503             | Internal error / order data source unavailable. No details in the body.                        |
-
-## Demo page
-
-`web/` is a small page that lets a visitor talk to the agent in the browser. `npm run build` puts everything into `public/`, so one Vercel deployment serves one URL:
-
-| Path     | What                                                                                             |
-| -------- | ------------------------------------------------------------------------------------------------ |
-| `/`      | The landing page from [`../landing-page`](../landing-page), built by `scripts/build-landing.mjs` |
-| `/demo/` | This call page (`web/`)                                                                          |
-| `/api/*` | The serverless functions                                                                         |
-
-The landing page shows a **Talk to Lumina** button linking to `/demo/` only in this combined build; its GitHub Pages build is unchanged.
+Old `/demo/` links redirect to `/`. The kit page links back to `/` with a **Talk to Lumina** button only in this combined build; its GitHub Pages build is unchanged.
 
 How a call starts:
 
@@ -255,7 +187,7 @@ npm run build
 npm run dev:local
 ```
 
-Open http://localhost:3000 for the landing page and http://localhost:3000/demo/ for the call page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
+Open http://localhost:3000 for the Talk to Lumina page and http://localhost:3000/kit/ for the kit page. To make its call button work locally, put a real `RETELL_API_KEY` and `RETELL_AGENT_ID` in `.env`. While editing the page, `npm run dev:web` serves it with live reload on port 5173 and forwards `/api` to port 3000.
 
 Then, in another terminal, send signed sample requests:
 

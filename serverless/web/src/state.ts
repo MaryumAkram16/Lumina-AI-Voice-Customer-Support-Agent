@@ -1,5 +1,5 @@
 /**
- * Pure view logic for the demo page: no DOM, no network. What the console
+ * Pure view logic for the Talk to Lumina page: no DOM, no network. What the console
  * shows in each state, how errors are worded, and the demo prompts.
  */
 
@@ -19,8 +19,8 @@ export function viewFor(state: CallState, detail = ''): View {
   switch (state) {
     case 'unavailable':
       return {
-        status: 'Voice demo is offline',
-        detail: detail || 'Calls are not switched on for this deployment yet.',
+        status: 'Lumina is offline',
+        detail: detail || 'Voice calls are not switched on right now. Please check back soon.',
         start: 'Start call',
         startDisabled: true,
         inCall: false,
@@ -82,8 +82,8 @@ export function describeError(error: unknown): string {
     return 'No microphone was found. Plug one in or check your sound settings.';
   }
   if (status === 429) return 'Too many calls were started from here. Try again in a few minutes.';
-  if (status === 503) return 'Calls are not switched on for this deployment yet.';
-  if (status === 403) return 'This page is not allowed to start calls on that backend.';
+  if (status === 503) return 'Voice calls are not switched on right now. Please check back soon.';
+  if (status === 403) return 'This page is not allowed to start calls. Please try again later.';
   if (status >= 500) return 'The voice service did not answer. Please try again in a moment.';
   if (name === 'TypeError' || /failed to fetch|network/i.test(message)) {
     return 'The connection dropped. Check your internet and try again.';
@@ -122,6 +122,38 @@ export function levelOf(samples: ArrayLike<number>): number {
     sum += sample * sample;
   }
   return Math.min(1, Math.sqrt(Math.sqrt(sum / samples.length)) * 1.6);
+}
+
+export interface TranscriptLine {
+  speaker: 'you' | 'lumina';
+  text: string;
+}
+
+/**
+ * Turns Retell's live transcript into the lines shown under the mic. Keeps only
+ * what the caller and Lumina said (no tool calls, node changes or other
+ * events), drops empty entries and backchannels like "mm-hmm", and joins
+ * consecutive entries from the same speaker into one line.
+ */
+export function toTranscript(utterances: readonly unknown[]): TranscriptLine[] {
+  const lines: TranscriptLine[] = [];
+  for (const utterance of utterances) {
+    if (typeof utterance !== 'object' || utterance === null) continue;
+    const { role, content, metadata } = utterance as {
+      role?: unknown;
+      content?: unknown;
+      metadata?: { is_backchannel?: unknown };
+    };
+    if (role !== 'agent' && role !== 'user') continue;
+    if (metadata?.is_backchannel === true) continue;
+    const text = typeof content === 'string' ? content.trim() : '';
+    if (!text) continue;
+    const speaker = role === 'agent' ? 'lumina' : 'you';
+    const last = lines.at(-1);
+    if (last?.speaker === speaker) last.text = `${last.text} ${text}`;
+    else lines.push({ speaker, text });
+  }
+  return lines;
 }
 
 export interface Prompt {
