@@ -67,7 +67,13 @@ describe('route modules', () => {
     const reply = await call('health', null, { method: 'GET', signature: false });
     expect(reply).toEqual({
       status: 200,
-      body: { status: 'ok', service: 'lumina-serverless', data_source: 'demo', web_call: false },
+      body: {
+        status: 'ok',
+        service: 'lumina-serverless',
+        data_source: 'demo',
+        web_call: false,
+        passcode: false,
+      },
     });
     expect((await call('health', {}, { method: 'POST' })).status).toBe(405);
   });

@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { ConfigError, loadConfig, type AppConfig } from './config.js';
 import { createRepository } from './data/index.js';
 import { DataSourceError, type OrderRepository } from './data/types.js';
@@ -51,6 +51,7 @@ type ErrorCode =
   | 'web_call_not_configured'
   | 'web_call_failed'
   | 'forbidden'
+  | 'passcode_required'
   | 'internal_error';
 
 /** Every error still carries a sentence the agent can say out loud. */
@@ -70,6 +71,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   web_call_not_configured: 'The voice demo is not switched on for this deployment.',
   web_call_failed: "I couldn't start the call. Please try again in a moment.",
   forbidden: 'This transcript is not available.',
+  passcode_required: 'This demo needs a valid demo code to start a call.',
   internal_error: 'Sorry, something went wrong on my side. Please try again in a moment.',
 };
 
@@ -145,6 +147,16 @@ export function createApp(deps: AppDeps): App {
   const repository = deps.repository ?? createRepository(config);
   const limiter = new RateLimiter(config.rateLimit.windowMs);
   const webCallLimiter = new RateLimiter(config.webCall.windowMs);
+  // Wrong demo codes get their own, tighter budget so guessing is slow.
+  const passcodeLimiter = new RateLimiter(10 * 60_000);
+
+  /** Constant-time comparison of the code a browser sent with WEB_CALL_PASSCODE. */
+  function passcodeMatches(given: unknown): boolean {
+    if (config.webCallPasscode === null) return true;
+    if (typeof given !== 'string') return false;
+    const digest = (value: string) => createHash('sha256').update(value).digest();
+    return timingSafeEqual(digest(given.trim()), digest(config.webCallPasscode));
+  }
   const createWebCall =
     deps.createWebCall ?? ((agentId) => createRetellWebCall(config.retellApiKey, agentId));
   // One service per app, so its per-order locks span requests.
@@ -376,6 +388,35 @@ export function createApp(deps: AppDeps): App {
       const agentId = config.retellAgentId;
       if (!agentId) return done(fail(503, 'web_call_not_configured', requestId, cors));
 
+      // Only the demo code is read from the body. The agent and everything
+      // else about the call come from configuration.
+      const raw = await readBody(request, 4096);
+      if (raw === null) return done(fail(413, 'payload_too_large', requestId, cors));
+      if (config.webCallPasscode !== null) {
+        const guesses = passcodeLimiter.peek(`ip:${clientIp(request)}`, 10);
+        if (!guesses.allowed) {
+          return done(
+            fail(429, 'rate_limited', requestId, {
+              ...cors,
+              'retry-after': String(guesses.retryAfterSeconds),
+            }),
+          );
+        }
+        let passcode: unknown;
+        try {
+          passcode = (JSON.parse(raw || '{}') as { passcode?: unknown }).passcode;
+        } catch {
+          passcode = undefined;
+        }
+        if (!passcodeMatches(passcode)) {
+          passcodeLimiter.check(`ip:${clientIp(request)}`, 10);
+          return done(fail(401, 'passcode_required', requestId, cors), {
+            passcode: passcode === undefined ? 'missing' : 'wrong',
+          });
+        }
+      }
+
+      // Checked after the code, so wrong codes never use up real call starts.
       const perIp = webCallLimiter.check(`ip:${clientIp(request)}`, config.webCall.maxPerIp);
       const overall = perIp.allowed ? webCallLimiter.check('all', config.webCall.maxGlobal) : perIp;
       if (!overall.allowed) {
@@ -385,11 +426,6 @@ export function createApp(deps: AppDeps): App {
             'retry-after': String(overall.retryAfterSeconds),
           }),
         );
-      }
-
-      // The body is read only to enforce the size limit. Its content is ignored.
-      if ((await readBody(request, 4096)) === null) {
-        return done(fail(413, 'payload_too_large', requestId, cors));
       }
 
       let call: Record<string, unknown>;
@@ -548,6 +584,7 @@ export function createApp(deps: AppDeps): App {
         service: 'lumina-serverless',
         data_source: repository.name,
         web_call: config.retellAgentId !== null,
+        passcode: config.webCallPasscode !== null,
       },
       requestId,
     );

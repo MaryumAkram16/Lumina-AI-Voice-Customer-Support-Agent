@@ -17,6 +17,8 @@ export interface AppConfig {
   retellApiKey: string;
   /** Agent the browser demo calls. Null switches the web-call endpoint off. */
   retellAgentId: string | null;
+  /** When set, a browser must send this code to start a call. Null means no code. */
+  webCallPasscode: string | null;
   /** Limits on starting browser calls, which cost Retell minutes. */
   webCall: { windowMs: number; maxPerIp: number; maxGlobal: number };
   allowedOrigins: readonly string[];
@@ -94,6 +96,11 @@ export function loadConfig(env: Env = process.env): AppConfig {
   const retellAgentId = env.RETELL_AGENT_ID?.trim() || null;
   if (retellAgentId && !/^[A-Za-z0-9_-]{6,100}$/.test(retellAgentId)) {
     problems.push('RETELL_AGENT_ID is not a valid agent ID');
+  }
+
+  const webCallPasscode = env.WEB_CALL_PASSCODE?.trim() || null;
+  if (webCallPasscode && !/^[\x21-\x7e]{4,64}$/.test(webCallPasscode)) {
+    problems.push('WEB_CALL_PASSCODE must be 4 to 64 characters with no spaces');
   }
 
   const allowedOrigins = (env.ALLOWED_ORIGINS ?? '')
@@ -176,6 +183,7 @@ export function loadConfig(env: Env = process.env): AppConfig {
     dataSource,
     retellApiKey,
     retellAgentId,
+    webCallPasscode,
     webCall: {
       windowMs: int(env, 'WEB_CALL_RATE_LIMIT_WINDOW_MS', 600_000, 1000, 86_400_000, problems),
       maxPerIp: int(env, 'WEB_CALL_MAX_PER_IP', 5, 1, 10_000, problems),

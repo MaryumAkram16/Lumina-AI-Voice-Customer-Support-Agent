@@ -81,6 +81,7 @@ export function describeError(error: unknown): string {
   if (name === 'NotFoundError' || /requested device not found|no microphone/i.test(message)) {
     return 'No microphone was found. Plug one in or check your sound settings.';
   }
+  if (status === 401) return "That demo code didn't work. Check it and try again.";
   if (status === 429) return 'Too many calls were started from here. Try again in a few minutes.';
   if (status === 503) return 'Voice calls are not switched on right now. Please check back soon.';
   if (status === 403) return 'This page is not allowed to start calls. Please try again later.';

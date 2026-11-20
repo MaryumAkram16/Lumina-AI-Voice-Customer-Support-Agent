@@ -47,6 +47,7 @@ describe('demo page view logic', () => {
     expect(describeError(http(429))).toMatch(/Too many calls/);
     expect(describeError(http(503))).toMatch(/not switched on/);
     expect(describeError(http(403))).toMatch(/not allowed/);
+    expect(describeError(http(401))).toMatch(/demo code/);
     expect(describeError(http(502))).toMatch(/did not answer/);
     expect(describeError(new TypeError('Failed to fetch'))).toMatch(/connection dropped/);
     for (const error of [http(400), new Error('boom at file.ts:1'), 'a string', null, undefined]) {
