@@ -29,7 +29,11 @@ export interface AppDeps {
   createWebCall?: (agentId: string) => Promise<Record<string, unknown>>;
   /** Opens Retell's monitor socket. Injectable so tests never call Retell. */
   openMonitorSocket?: OpenMonitorSocket;
-  /** How long one transcript stream stays open before the page reconnects. */
+  /**
+   * How long one transcript stream stays open before the page reconnects.
+   * Kept under the 10 s function limit in vercel.json; each reconnect starts
+   * with the whole transcript, so the page loses nothing.
+   */
   transcriptStreamMs?: number;
 }
 
@@ -493,7 +497,7 @@ export function createApp(deps: AppDeps): App {
             close();
           }
         }, 15_000);
-        const lifetime = setTimeout(close, deps.transcriptStreamMs ?? 55_000);
+        const lifetime = setTimeout(close, deps.transcriptStreamMs ?? 8_000);
         request.signal.addEventListener('abort', close);
         stop = relayCallTranscript(
           {

@@ -7,10 +7,6 @@
     "api/*.ts": {
       "maxDuration": 10,
       "memory": 512
-    },
-    "api/call-transcript.ts": {
-      "maxDuration": 60,
-      "memory": 256
     }
   },
   "headers": [
