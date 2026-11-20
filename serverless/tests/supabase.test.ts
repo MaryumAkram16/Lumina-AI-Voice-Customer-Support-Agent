@@ -4,10 +4,10 @@ import { createRepository } from '../lib/data/index.js';
 import { SupabaseOrderRepository, type SupabaseOptions } from '../lib/data/supabase-repository.js';
 import { DataSourceError } from '../lib/data/types.js';
 
-const API_KEY = 'retell-key-0123456789abcdef';
+const API_KEY = 'key_test_only_not_a_real_retell_key';
 const OPTIONS: SupabaseOptions = {
   url: 'https://abcd1234.supabase.co',
-  serviceKey: 'eyJhbGciOiJIUzI1NiJ9.service.role',
+  serviceKey: 'test_only_not_a_real_service_role_key',
   table: 'orders',
   timeoutMs: 50,
   retries: 2,
@@ -116,9 +116,11 @@ describe('Supabase adapter', () => {
   });
 
   it('sends the newer sb_secret_ keys in apikey only', async () => {
-    const { repo, calls } = fake(() => Response.json([]), { serviceKey: 'sb_secret_abc123' });
+    const { repo, calls } = fake(() => Response.json([]), {
+      serviceKey: 'sb_secret_test_only_not_real',
+    });
     await repo.findByOrderId('ORD-TEST-001');
-    expect(first(calls).headers.apikey).toBe('sb_secret_abc123');
+    expect(first(calls).headers.apikey).toBe('sb_secret_test_only_not_real');
     expect(first(calls).headers.authorization).toBeUndefined();
   });
 
@@ -185,7 +187,7 @@ describe('Supabase configuration', () => {
       RETELL_API_KEY: API_KEY,
       DATA_SOURCE: 'supabase',
       SUPABASE_URL: 'http://abcd.supabase.co',
-      SUPABASE_SERVICE_ROLE_KEY: 'sb_publishable_123',
+      SUPABASE_SERVICE_ROLE_KEY: 'sb_publishable_test_only_not_real',
     });
     expect(found.join(' ')).toMatch(/SUPABASE_URL must be/);
     expect(found.join(' ')).toMatch(/not the publishable key/);
@@ -196,7 +198,7 @@ describe('Supabase configuration', () => {
       RETELL_API_KEY: API_KEY,
       DATA_SOURCE: 'supabase',
       SUPABASE_URL: 'https://abcd1234.supabase.co/',
-      SUPABASE_SECRET_KEY: 'sb_secret_abc123',
+      SUPABASE_SECRET_KEY: 'sb_secret_test_only_not_real',
     });
     expect(config.supabase).toMatchObject({
       url: 'https://abcd1234.supabase.co',

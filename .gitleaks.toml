@@ -1,0 +1,14 @@
+# Secret scan settings (used by the gitleaks step in .github/workflows/serverless-ci.yml).
+# Keeps every default rule. The allowlist only covers fake keys that an older
+# version of serverless/tests/supabase.test.ts contained; they are still in git
+# history, which the scan reads in full. Never add a real key here: rotate it.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fake test keys in git history"
+regexes = [
+  '''retell-key-0123456789abcdef''',
+  '''eyJhbGciOiJIUzI1NiJ9\.service\.role''',
+  '''sb_secret_abc123''',
+]
