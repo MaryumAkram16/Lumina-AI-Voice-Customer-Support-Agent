@@ -16,14 +16,28 @@ export interface CallHandlers {
  * /api/create-web-call, which holds the key and picks the agent. Retell's
  * reply contains a short-lived token, and the client joins the call with it.
  */
-const serverSideFetch: typeof fetch = (input) => {
+/** Set from each create-web-call response: what the page needs to follow the transcript. */
+let lastCall: { callId: string; token: string } | null = null;
+
+const serverSideFetch: typeof fetch = async (input) => {
   const url = input instanceof Request ? input.url : String(input);
   if (new URL(url).pathname === '/v3/create-web-call') {
-    return fetch('/api/create-web-call', {
+    const response = await fetch('/api/create-web-call', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: '{}',
     });
+    if (response.ok) {
+      const body = (await response
+        .clone()
+        .json()
+        .catch(() => ({}))) as { call_id?: unknown; transcript_token?: unknown };
+      lastCall =
+        typeof body.call_id === 'string' && typeof body.transcript_token === 'string'
+          ? { callId: body.call_id, token: body.transcript_token }
+          : null;
+    }
+    return response;
   }
   // Nothing else is offered to the browser.
   return Promise.resolve(
@@ -38,12 +52,41 @@ export interface ActiveCall {
   end(): void;
 }
 
+/**
+ * Follows the call's live transcript through this site's /api/call-transcript,
+ * which holds the Retell key and relays only what was said. EventSource
+ * reconnects by itself whenever a stream reaches its lifetime; each new stream
+ * starts with the whole transcript, so nothing is lost.
+ */
+function followTranscript(
+  call: { callId: string; token: string },
+  onLines: (lines: TranscriptLine[]) => void,
+): () => void {
+  const params = new URLSearchParams({ call_id: call.callId, token: call.token });
+  const source = new EventSource(`/api/call-transcript?${params.toString()}`);
+  const stop = () => {
+    source.close();
+  };
+  source.addEventListener('transcript', (event) => {
+    try {
+      const data = JSON.parse(String(event.data)) as { utterances?: unknown };
+      onLines(toTranscript(Array.isArray(data.utterances) ? data.utterances : []));
+    } catch {
+      // Ignore a malformed event; the next one carries the whole transcript again.
+    }
+  });
+  source.addEventListener('end', stop);
+  source.addEventListener('unavailable', stop);
+  return stop;
+}
+
 /** Starts a call. Must run from a click, because the microphone prompt happens here. */
 export function startCall(handlers: CallHandlers): ActiveCall {
   // The client reports a fatal failure as an `error` followed, in the same
   // tick, by `end`. An `error` with no `end` behind it is only a warning.
   let fatal: Error | undefined;
-  let sawTranscript = false;
+  let stopTranscript = (): void => undefined;
+  lastCall = null;
 
   const session: WebCallSession = client.createWebCall({
     // Ignored by the server, which uses the agent it is configured with.
@@ -51,16 +94,12 @@ export function startCall(handlers: CallHandlers): ActiveCall {
     audio: { emitRawAudioSamples: true },
     hooks: {
       onStatus: (status) => {
-        if (status === 'live') handlers.onLive();
-      },
-      // Both hooks carry the full transcript so far. Newer Retell clients send
-      // `onTranscript`; `onUpdate` is the older event and the fallback.
-      onTranscript: (transcript) => {
-        sawTranscript = true;
-        handlers.onTranscript(toTranscript(transcript));
-      },
-      onUpdate: (event) => {
-        if (!sawTranscript) handlers.onTranscript(toTranscript(event.transcript));
+        if (status !== 'live') return;
+        handlers.onLive();
+        if (lastCall)
+          stopTranscript = followTranscript(lastCall, (lines) => {
+            handlers.onTranscript(lines);
+          });
       },
       onAudio: (samples) => {
         handlers.onLevel(samples);
@@ -72,6 +111,10 @@ export function startCall(handlers: CallHandlers): ActiveCall {
         });
       },
       onEnd: (event) => {
+        // Give the last words a moment to arrive before the stream closes.
+        window.setTimeout(() => {
+          stopTranscript();
+        }, 3000);
         if (fatal) handlers.onError(fatal);
         else handlers.onEnded(event.disconnection_reason);
       },

@@ -8,6 +8,13 @@ import { resolveIntent, type Intent } from './rules.js';
 import { parseRequestBody } from './schema.js';
 import { OrderService } from './service.js';
 import { SIGNATURE_HEADER, verifyRetellSignature } from './signature.js';
+import {
+  isCallId,
+  relayCallTranscript,
+  signTranscriptToken,
+  verifyTranscriptToken,
+  type OpenMonitorSocket,
+} from './transcript.js';
 import { createRetellWebCall } from './web-call.js';
 
 /** A dedicated route fixes the intent; `order` reads it from the body like n8n does. */
@@ -20,6 +27,10 @@ export interface AppDeps {
   now?: () => Date;
   /** Asks Retell for a web call. Injectable so tests never call Retell. */
   createWebCall?: (agentId: string) => Promise<Record<string, unknown>>;
+  /** Opens Retell's monitor socket. Injectable so tests never call Retell. */
+  openMonitorSocket?: OpenMonitorSocket;
+  /** How long one transcript stream stays open before the page reconnects. */
+  transcriptStreamMs?: number;
 }
 
 type ErrorCode =
@@ -35,6 +46,7 @@ type ErrorCode =
   | 'service_unavailable'
   | 'web_call_not_configured'
   | 'web_call_failed'
+  | 'forbidden'
   | 'internal_error';
 
 /** Every error still carries a sentence the agent can say out loud. */
@@ -53,6 +65,7 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
     "I'm having trouble reaching our order system right now. Please try again in a moment.",
   web_call_not_configured: 'The voice demo is not switched on for this deployment.',
   web_call_failed: "I couldn't start the call. Please try again in a moment.",
+  forbidden: 'This transcript is not available.',
   internal_error: 'Sorry, something went wrong on my side. Please try again in a moment.',
 };
 
@@ -117,6 +130,7 @@ async function readBody(request: Request, maxBytes: number): Promise<string | nu
 export interface App {
   handle(route: Route, request: Request): Promise<Response>;
   webCall(request: Request): Promise<Response>;
+  transcript(request: Request): Response;
   health(request: Request): Response;
 }
 
@@ -389,11 +403,17 @@ export function createApp(deps: AppDeps): App {
         return done(fail(502, 'web_call_failed', requestId, cors));
       }
 
-      const body = Object.fromEntries(
+      const body: Record<string, unknown> = Object.fromEntries(
         WEB_CALL_FIELDS.filter((field) => call[field] !== undefined).map((field) => [
           field,
           call[field],
         ]),
+      );
+      // Lets this page, and only this page, read the call's live transcript.
+      body.transcript_token = signTranscriptToken(
+        config.retellApiKey,
+        call.call_id,
+        Math.floor(now().getTime() / 1000),
       );
       return done(respond(200, body, requestId, cors), { call_id: call.call_id });
     } catch (error) {
@@ -403,6 +423,113 @@ export function createApp(deps: AppDeps): App {
       });
       return done(fail(500, 'internal_error', requestId));
     }
+  }
+
+  /**
+   * Streams a web call's live transcript to the page that started it, as
+   * server-sent events. Retell's transcript stream needs the secret API key,
+   * so the server holds it and relays only what the caller and Lumina said.
+   * Each stream closes after `transcriptStreamMs`; the browser's EventSource
+   * reconnects by itself and gets the whole transcript again.
+   */
+  function transcript(request: Request): Response {
+    const requestId = randomUUID();
+    const logger = baseLogger.child({ request_id: requestId, route: 'call_transcript' });
+    if (request.method !== 'GET') {
+      return fail(405, 'method_not_allowed', requestId, { allow: 'GET' });
+    }
+    const url = new URL(request.url);
+    const callId = url.searchParams.get('call_id');
+    const token = url.searchParams.get('token');
+    const nowSeconds = Math.floor(now().getTime() / 1000);
+    if (
+      !isCallId(callId) ||
+      !verifyTranscriptToken(config.retellApiKey, callId, token, nowSeconds)
+    ) {
+      logger.log('warn', 'transcript_forbidden', {});
+      return fail(403, 'forbidden', requestId);
+    }
+    const ip = limiter.check(`transcript:${clientIp(request)}`, config.rateLimit.maxPerIp);
+    if (!ip.allowed) {
+      return fail(429, 'rate_limited', requestId, { 'retry-after': String(ip.retryAfterSeconds) });
+    }
+
+    const encoder = new TextEncoder();
+    let cleanup = (): void => undefined;
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        let closed = false;
+        let stop = (): void => undefined;
+        const send = (event: string, data: unknown) => {
+          if (closed) return;
+          try {
+            controller.enqueue(
+              encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
+            );
+          } catch {
+            closed = true;
+          }
+        };
+        const close = () => {
+          if (closed) return;
+          closed = true;
+          clearInterval(heartbeat);
+          clearTimeout(lifetime);
+          stop();
+          try {
+            controller.close();
+          } catch {
+            // Already closed by the client.
+          }
+        };
+        cleanup = close;
+
+        // Reconnect quickly when this stream reaches its lifetime.
+        controller.enqueue(encoder.encode('retry: 500\n\n'));
+        const heartbeat = setInterval(() => {
+          try {
+            controller.enqueue(encoder.encode(': keep-alive\n\n'));
+          } catch {
+            close();
+          }
+        }, 15_000);
+        const lifetime = setTimeout(close, deps.transcriptStreamMs ?? 55_000);
+        request.signal.addEventListener('abort', close);
+        stop = relayCallTranscript(
+          {
+            apiKey: config.retellApiKey,
+            callId,
+            ...(deps.openMonitorSocket ? { open: deps.openMonitorSocket } : {}),
+          },
+          {
+            onTranscript: (spoken) => {
+              send('transcript', { utterances: spoken });
+            },
+            onEnd: () => {
+              send('end', {});
+              close();
+            },
+            onUnavailable: (reason) => {
+              logger.log('warn', 'transcript_unavailable', { detail: reason, call_id: callId });
+              send('unavailable', {});
+              close();
+            },
+          },
+        );
+      },
+      cancel() {
+        cleanup();
+      },
+    });
+
+    const headers: Record<string, string> = {
+      ...SECURITY_HEADERS,
+      'content-type': 'text/event-stream; charset=utf-8',
+      'cache-control': 'no-store, no-transform',
+      'x-accel-buffering': 'no',
+      'x-request-id': requestId,
+    };
+    return new Response(stream, { status: 200, headers });
   }
 
   function health(request: Request): Response {
@@ -422,7 +549,7 @@ export function createApp(deps: AppDeps): App {
     );
   }
 
-  return { handle, webCall, health };
+  return { handle, webCall, transcript, health };
 }
 
 // ---------------------------------------------------------------------------
@@ -478,6 +605,19 @@ export function webCallHandler(): (request: Request) => Promise<Response> {
       return misconfigured(error, 500);
     }
     return app.webCall(request);
+  };
+}
+
+/** Handler for `api/call-transcript.ts`. */
+export function transcriptHandler(): (request: Request) => Response {
+  return (request) => {
+    let app: App;
+    try {
+      app = getDefaultApp();
+    } catch (error) {
+      return misconfigured(error, 500);
+    }
+    return app.transcript(request);
   };
 }
 

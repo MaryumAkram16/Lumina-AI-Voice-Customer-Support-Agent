@@ -65,6 +65,7 @@ describe('POST /api/create-web-call', () => {
       access_token: 'token_for_the_browser',
       transport: 'livekit',
       url: 'wss://rtc.example.test',
+      transcript_token: expect.stringMatching(/^\d+\.[A-Za-z0-9_-]{43}$/) as unknown,
     });
     expect(agents).toEqual([AGENT]);
     expect(reply.headers.get('cache-control')).toBe('no-store');

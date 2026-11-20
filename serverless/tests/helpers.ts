@@ -5,6 +5,7 @@ import { createApp, type App, type Route } from '../lib/http.js';
 import { createLogger } from '../lib/logger.js';
 import { calendarDay, type RuleContext } from '../lib/rules.js';
 import { signRetellBody } from '../lib/signature.js';
+import type { OpenMonitorSocket } from '../lib/transcript.js';
 
 /** Obviously fake. Only ever used to sign requests inside the test process. */
 export const API_KEY = 'key_test_only_not_a_real_retell_key';
@@ -60,6 +61,8 @@ export function makeApp(
     env?: Record<string, string>;
     repository?: OrderRepository;
     createWebCall?: (agentId: string) => Promise<Record<string, unknown>>;
+    openMonitorSocket?: OpenMonitorSocket;
+    transcriptStreamMs?: number;
   } = {},
 ): TestApp {
   const logs: string[] = [];
@@ -70,6 +73,8 @@ export function makeApp(
     logger: createLogger((line) => logs.push(line)),
     now: () => NOW,
     ...(options.createWebCall ? { createWebCall: options.createWebCall } : {}),
+    ...(options.openMonitorSocket ? { openMonitorSocket: options.openMonitorSocket } : {}),
+    ...(options.transcriptStreamMs ? { transcriptStreamMs: options.transcriptStreamMs } : {}),
   });
   return { app, logs, repository };
 }
