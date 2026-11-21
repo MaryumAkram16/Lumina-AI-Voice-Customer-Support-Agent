@@ -31,11 +31,9 @@ This demo shows the *Lumina AI Voice Customer Support Agent* handling a live e-c
 
 ### Try it yourself
 
-> Placeholders: fill these in after deploying [`serverless/`](serverless/).
+Lumina is deployed on Vercel: a browser page where you press **Start call**, talk to Lumina and read the live transcript, plus the kit page and a backend health check.
 
-- **Talk to Lumina:** `https://YOUR-PROJECT.vercel.app` (press **Start call**, talk to Lumina in the browser and read the live transcript)
-- **Kit page:** `https://YOUR-PROJECT.vercel.app/kit/`
-- **Backend health check:** `https://YOUR-PROJECT.vercel.app/api/health`
+**Live demo available on request.** Every call uses metered voice and AI minutes, so the link is shared on request rather than published. [Contact me](https://maryumakram16.github.io/maryum-portfolio/contact) and I'll send it. To run your own copy, deploy [`serverless/`](serverless/).
 
 The hosted demo uses synthetic orders only. Phrases to try:
 
